@@ -2202,11 +2202,22 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   }
 
+  // Preload logo video aggressively — play silently in background so it's decoded and ready
   var lv=document.getElementById('logo-vid');
-  if(lv){
+  if(lv && window.innerWidth > 768){
+    // Make it invisible but playing so browser fully decodes it
+    lv.style.visibility='hidden';
+    lv.muted=true;
     lv.load();
-    // Pre-warm: play a frame then pause so browser decodes first frame
-    lv.play().then(function(){ lv.pause(); lv.currentTime=0; }).catch(function(){});
+    lv.play().then(function(){
+      // Running silently — pause and rewind, ready for instant click
+      lv.pause();
+      lv.currentTime=0;
+      lv.style.visibility='';
+    }).catch(function(){
+      // Autoplay blocked — at least load the buffer
+      lv.load();
+    });
   }
 });
 
