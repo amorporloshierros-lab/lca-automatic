@@ -411,8 +411,9 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
   .stat-val{font-size:30px}
   .scroll-hint{display:none}
 
-  /* MOBILE: hide intro video entirely — no flash, direct to hero */
-  #video-intro{display:none !important}
+  /* MOBILE: intro video fills screen */
+  #video-intro{display:block;background:#0D0D12}
+  #intro-vid{object-fit:cover !important;object-position:center center}
 
   /* Modal logo transition — adapt to mobile screen */
   #logo-transition{background:#0D0D12}
@@ -1921,16 +1922,6 @@ function revealHero(){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
-  // Skip video on mobile — go straight to hero
-  if(window.innerWidth <= 768){
-    transitionDone=true;
-    const intro=document.getElementById('video-intro');
-    if(intro)intro.style.display='none';
-    document.body.style.overflow='';
-    revealHero();
-    return;
-  }
-
   const vid=document.getElementById('intro-vid');
   if(!vid)return;
   vid.addEventListener('timeupdate',()=>{
