@@ -411,33 +411,35 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
   .stat-val{font-size:30px}
   .scroll-hint{display:none}
 
-  /* Video intro mobile */
-  #video-intro{background:#0D0D12}
-  #intro-vid{
+  /* MOBILE: hide intro video entirely — no flash, direct to hero */
+  #video-intro{display:none !important}
+
+  /* Modal logo transition — adapt to mobile screen */
+  #logo-transition{background:#0D0D12}
+  #logo-vid{
     object-fit:contain !important;
     object-position:center center;
-    width:100% !important;
-    height:100% !important;
   }
-  /* Fade top and bottom into site background */
-  #video-intro::before{
-    content:'';
-    position:absolute;top:0;left:0;right:0;
-    height:35%;
-    background:linear-gradient(to bottom,#0D0D12 0%,transparent 100%);
-    z-index:2;pointer-events:none;
+  #logo-rings svg{width:280px;height:280px}
+  #logo-loading-text{font-size:9px;letter-spacing:3px;bottom:8%}
+  #logo-progress{height:2px}
+
+  /* Modal form — full screen on mobile */
+  #project-modal{align-items:flex-end;padding:0}
+  #modal-content{
+    width:100%;
+    max-height:92dvh;
+    overflow-y:auto;
+    border-radius:20px 20px 0 0;
+    background:var(--surface);
+    padding:24px 20px 32px;
   }
-  #video-intro::after{
-    content:'';
-    position:absolute;bottom:0;left:0;right:0;
-    height:35%;
-    background:linear-gradient(to top,#0D0D12 0%,transparent 100%);
-    z-index:2;pointer-events:none;
-  }
-  /* Also fade left and right sides */
-  #intro-side-fades{display:block}
-  #intro-logo{z-index:5}
-  #intro-bar-bg{z-index:5}
+  .modal-title{font-size:22px}
+  .modal-grid{grid-template-columns:1fr}
+  .modal-chips{gap:6px}
+  .modal-chip{font-size:11px;padding:6px 12px}
+  #modal-orb-bg{display:none}
+  #modal-rings{display:none}
 
   /* Sections */
   section{padding:60px 20px}
@@ -537,6 +539,7 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
   width:min(560px,calc(100% - 40px));
   opacity:0;transform:translateY(30px);
   transition:opacity .5s ease .4s, transform .5s ease .4s;
+  background:transparent;
 }
 #project-modal.open #modal-content{opacity:1;transform:translateY(0)}
 
@@ -768,6 +771,7 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
   width:min(560px,calc(100% - 40px));
   opacity:0;transform:translateY(30px);
   transition:opacity .5s ease .4s, transform .5s ease .4s;
+  background:transparent;
 }
 #project-modal.open #modal-content{opacity:1;transform:translateY(0)}
 
