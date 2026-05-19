@@ -379,137 +379,152 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
 }
 
 /* ── MOBILE (max 768px) ── */
-@media(max-width:768px){
-  /* Header */
-  #header{
-    width:calc(100% - 24px);
-    top:10px;
-    padding:10px 14px;
-  }
-  #header .nav-links{display:none}
-  #header .logo-name{font-size:14px}
-
-  /* Hero */
-  #hero{
-    padding:100px 20px 70px;
-    min-height:100svh;
-  }
-  #hero-scene{display:none} /* hide complex SVG on mobile */
-  .hero-eyebrow{font-size:9px;letter-spacing:2px}
-  .hero-h1{
-    font-size:clamp(34px,9vw,52px);
-    letter-spacing:-1px;
-    margin-bottom:20px;
-  }
-  .hero-sub{font-size:15px;margin-bottom:32px}
-  .hero-ctas{flex-direction:column;gap:10px}
-  .btn-hero-primary,.btn-hero-wa{
-    width:100%;justify-content:center;
-    padding:14px 24px;font-size:15px;
-  }
-  .hero-stats{gap:24px;flex-wrap:wrap}
-  .stat-val{font-size:30px}
-  .scroll-hint{display:none}
-
-  /* MOBILE: intro video fills screen */
-  #video-intro{display:block;background:#0D0D12}
-  #intro-vid{object-fit:cover !important;object-position:center center}
-
-  /* Modal logo transition — adapt to mobile screen */
-  #logo-transition{background:#0D0D12}
-  #logo-vid{
-    object-fit:contain !important;
-    object-position:center center;
-  }
-  #logo-rings svg{width:280px;height:280px}
-  #logo-loading-text{font-size:9px;letter-spacing:3px;bottom:8%}
-  #logo-progress{height:2px}
-
-  /* Modal form — full screen on mobile */
-  #project-modal{align-items:flex-end;padding:0}
-  #modal-content{
-    width:100%;
-    max-height:92dvh;
-    overflow-y:auto;
-    border-radius:20px 20px 0 0;
-    background:var(--surface);
-    padding:24px 20px 32px;
-  }
-  .modal-title{font-size:22px}
-  .modal-grid{grid-template-columns:1fr}
-  .modal-chips{gap:6px}
-  .modal-chip{font-size:11px;padding:6px 12px}
-  #modal-orb-bg{display:none}
-  #modal-rings{display:none}
-
-  /* Sections */
-  section{padding:60px 20px}
-  .section-title{font-size:clamp(24px,7vw,38px)}
-  .section-desc{font-size:14px}
-
-  /* Features */
-  .feat-grid{grid-template-columns:1fr;gap:16px;margin-top:36px}
-  .feat-card{padding:24px 20px}
-
-  /* Philosophy */
-  .phil-head{display:none} /* hide column headers on mobile */
-  .phil-row{
-    grid-template-columns:1fr;
-    gap:6px;
-    padding:12px 0;
-  }
-  .phil-arr{display:none}
-  .phil-them{
-    font-size:12px;
-    padding:8px 12px;
-  }
-  .phil-them::before{content:"✗ Antes: ";color:#E63B2E;font-weight:600}
-  .phil-us{
-    font-size:12px;
-    padding:8px 12px;
-  }
-
-  /* Process */
-  .proc-grid{grid-template-columns:1fr;gap:14px;margin-top:36px}
-  .proc-card{padding:22px 18px}
-
-  /* Testimonials */
-  .testi-header{flex-direction:column;align-items:flex-start;margin-bottom:36px}
-  .testi-grid{grid-template-columns:1fr;gap:14px}
-  .testi-card{padding:22px 18px}
-
-  /* Form */
-  .form-box{padding:24px 16px}
-  .fields-row{grid-template-columns:1fr}
-  .service-pills{gap:6px}
-  .service-pill{font-size:11px;padding:7px 12px}
-  .alt-ctas{flex-direction:column;align-items:center;gap:10px}
-  .btn-outline{width:100%;justify-content:center;padding:12px 20px}
-
-  /* Footer */
-  .footer-grid{grid-template-columns:1fr;gap:28px}
-  footer{padding:40px 20px;border-radius:1.5rem 1.5rem 0 0}
-  .footer-bottom{flex-direction:column;align-items:flex-start;gap:8px}
-
-  /* Chatbot */
-  #cla-bot{bottom:16px;right:16px}
-  #bot-mascot svg{width:70px;height:88px}
-  #bot-bubble{font-size:10px;max-width:110px;padding:5px 8px}
-  #chat-panel{
-    width:calc(100vw - 24px);
-    right:12px;
-    bottom:100px;
-    border-radius:18px;
-  }
-  .chat-messages{max-height:200px}
+/* ══════════════════════════════════════
+   TABLET (max 1024px)
+══════════════════════════════════════ */
+@media(max-width:1024px){
+  #hero{padding:130px 40px 80px}
+  .hero-h1{font-size:clamp(38px,5.5vw,64px)}
+  .feat-grid{grid-template-columns:repeat(2,1fr)}
+  .proc-grid{grid-template-columns:repeat(2,1fr)}
+  .testi-grid{grid-template-columns:repeat(2,1fr)}
+  .footer-grid{grid-template-columns:1fr 1fr}
+  section{padding:80px 40px}
 }
 
-/* ── SMALL MOBILE (max 400px) ── */
+/* ══════════════════════════════════════
+   MOBILE (max 768px)
+══════════════════════════════════════ */
+@media(max-width:768px){
+
+  /* ── Intro video ── */
+  #video-intro{background:#000}
+  #intro-vid{object-fit:cover !important;object-position:center center}
+  #intro-logo img{height:44px !important}
+  #intro-logo-name{font-size:14px !important}
+
+  /* ── Header ── */
+  #header{
+    width:calc(100% - 20px);top:10px;
+    padding:8px 12px;border-radius:100px;
+  }
+  #header .nav-links{display:none}
+  #header .logo-name,
+  #header span[style*="Automatic"]{font-size:12px}
+  #header img{height:28px !important}
+  .btn-gold{font-size:12px;padding:8px 14px}
+
+  /* ── Hero ── */
+  #hero{padding:100px 20px 60px;min-height:100svh}
+  #hero-scene{display:none}
+  #hero-orb{display:none}
+  .hero-eyebrow{font-size:9px;letter-spacing:2px;margin-bottom:16px}
+  .hero-h1{
+    font-size:clamp(32px,8.5vw,48px);
+    letter-spacing:-1px;margin-bottom:18px;
+  }
+  .hero-sub{font-size:14px;margin-bottom:28px;line-height:1.7}
+  .hero-ctas{flex-direction:column;gap:10px;margin-bottom:40px}
+  .btn-hero-primary,.btn-hero-wa{
+    width:100%;justify-content:center;
+    padding:14px 20px;font-size:14px;border-radius:14px;
+  }
+  .hero-stats{gap:20px}
+  .stat-val{font-size:28px}
+  .stat-label{font-size:9px}
+  .scroll-hint{display:none}
+
+  /* ── Sections ── */
+  section{padding:56px 20px}
+  .section-title{font-size:clamp(22px,6.5vw,34px)}
+  .section-desc{font-size:13px}
+  .inner{max-width:100%}
+
+  /* ── Features ── */
+  .feat-grid{grid-template-columns:1fr;gap:14px;margin-top:28px}
+  .feat-card{padding:22px 18px}
+  .feat-title{font-size:18px}
+
+  /* ── Philosophy ── */
+  .phil-head{display:none}
+  .phil-row{grid-template-columns:1fr;gap:6px;padding:10px 0}
+  .phil-arr{display:none}
+  .phil-them{font-size:12px;padding:8px 12px}
+  .phil-us{font-size:12px;padding:8px 12px}
+
+  /* ── Process ── */
+  .proc-grid{grid-template-columns:1fr;gap:12px;margin-top:28px}
+  .proc-card{padding:20px 16px}
+
+  /* ── Testimonials ── */
+  .testi-header{flex-direction:column;align-items:flex-start;margin-bottom:28px}
+  .rating-big{font-size:36px}
+  .testi-grid{grid-template-columns:1fr;gap:12px}
+  .testi-card{padding:20px 16px}
+
+  /* ── Form ── */
+  .form-box{padding:22px 16px}
+  .fields-row{grid-template-columns:1fr}
+  .service-pills{gap:6px}
+  .service-pill{font-size:11px;padding:6px 12px}
+  .alt-ctas{flex-direction:column;align-items:stretch;gap:10px}
+  .btn-outline{justify-content:center;padding:12px 20px;font-size:13px}
+
+  /* ── Footer ── */
+  .footer-grid{grid-template-columns:1fr;gap:24px}
+  footer{padding:36px 20px;border-radius:1.5rem 1.5rem 0 0}
+  .footer-bottom{flex-direction:column;gap:8px}
+  .footer-logo img{height:28px !important}
+
+  /* ── Chatbot ── */
+  #cla-bot{bottom:14px;right:14px}
+  #bot-mascot svg{width:66px;height:84px}
+  #bot-bubble{font-size:10px}
+  #chat-panel{
+    width:calc(100vw - 20px);right:10px;
+    bottom:96px;border-radius:18px;
+  }
+  .chat-messages{max-height:180px}
+
+  /* ── Logo modal (Empezar ahora) ── */
+  #logo-transition{justify-content:center}
+  #logo-vid{object-fit:contain !important}
+  #logo-rings svg{width:260px;height:260px}
+  #logo-loading-text{font-size:9px;letter-spacing:3px;bottom:6%}
+
+  /* ── Project modal — bottom sheet ── */
+  #project-modal{align-items:flex-end}
+  #modal-orb-bg{display:none}
+  #modal-rings{display:none}
+  #modal-content{
+    width:100%;
+    border-radius:20px 20px 0 0;
+    background:var(--surface);
+    border:1px solid var(--bordersub);
+    padding:24px 18px 36px;
+    max-height:90dvh;
+    overflow-y:auto;
+    transform:translateY(40px);
+  }
+  #project-modal.open #modal-content{transform:translateY(0)}
+  .modal-title{font-size:20px}
+  .modal-sub{font-size:13px;margin-bottom:20px}
+  .modal-chips{gap:6px;margin-bottom:16px}
+  .modal-chip{font-size:11px;padding:6px 12px}
+  .modal-input{padding:13px 14px;font-size:14px}
+  .modal-submit{padding:15px;font-size:15px}
+  .modal-close{top:14px;right:14px}
+}
+
+/* ══════════════════════════════════════
+   SMALL MOBILE (max 400px)
+══════════════════════════════════════ */
 @media(max-width:400px){
-  .hero-h1{font-size:32px}
-  #hero{padding:90px 16px 60px}
-  section{padding:50px 16px}
-  .feat-card,.proc-card,.testi-card{padding:18px 14px}
+  .hero-h1{font-size:30px}
+  #hero{padding:88px 14px 56px}
+  section{padding:48px 14px}
+  .feat-card,.proc-card,.testi-card{padding:16px 12px}
+  .modal-chips{flex-wrap:wrap}
 }
 
 /* ═══ MODAL EMPEZAR AHORA ═══ */
