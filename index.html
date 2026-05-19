@@ -266,11 +266,11 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
 #bot-bubble{
   background:linear-gradient(135deg,#1a1608,#231c08);
   color:#E4C97B;font-size:11px;font-weight:600;
-  padding:8px 10px 8px 10px;
+  padding:6px 8px;
   border-radius:10px 10px 3px 10px;
   box-shadow:0 6px 24px rgba(0,0,0,.5),0 0 0 1px rgba(201,168,76,.35);
-  display:inline-block;
-  width:auto;
+  display:inline-block;width:auto;max-width:unset;
+  white-space:nowrap;
   line-height:1.35;text-align:center;position:relative;
   opacity:0;transform:translateY(8px) scale(.92);
   transition:opacity .4s ease,transform .4s ease;pointer-events:none}
@@ -1455,7 +1455,7 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
   <!-- Speech bubble -->
   <div id="bot-bubble">
     <span class="bubble-close" onclick="closeBubble()">✕</span>
-    Hablá con un<br><strong>asesor experto</strong>
+    Hablá con un <strong>asesor</strong>
     <div class="bubble-cta" onclick="toggleChat()">Abrir chat</div>
   </div>
 
