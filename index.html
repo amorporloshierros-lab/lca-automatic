@@ -569,7 +569,7 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
   transition:opacity .4s ease;
   background:rgba(8,8,14,0.97);
 }
-#project-modal.open{opacity:1;pointer-events:auto}
+#project-modal.open{opacity:1;pointer-events:auto;transition:none}
 
 /* Orb that expands from center */
 #modal-orb-bg{
@@ -801,7 +801,7 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
   transition:opacity .4s ease;
   background:rgba(8,8,14,0.97);
 }
-#project-modal.open{opacity:1;pointer-events:auto}
+#project-modal.open{opacity:1;pointer-events:auto;transition:none}
 
 /* Orb that expands from center */
 #modal-orb-bg{
@@ -2267,36 +2267,28 @@ function openModal(){
   const vid  = document.getElementById('logo-vid');
   const fill = document.getElementById('logo-progress-fill');
 
-  // Show overlay instantly
-  lt.style.opacity='1';
+  // INSTANT: show dark overlay immediately — no waiting for video
+  lt.style.transition = 'none';
+  lt.style.opacity = '1';
   lt.classList.add('active');
-  document.body.style.overflow='hidden';
-  fill.style.width='0%';
+  document.body.style.overflow = 'hidden';
+  fill.style.width = '0%';
 
-  // Swap to mobile source if needed
-  if(window.innerWidth <= 768){
-    var src=vid.querySelector('source');
-    var mobSrc=src ? src.getAttribute('data-mobile-src') : null;
-    if(mobSrc && src.src !== mobSrc){ src.src=mobSrc; vid.load(); }
-  }
-  // Video already preloaded — seek to 0 and play
-  vid.currentTime=0;
-  var playPromise = vid.play();
-  if(playPromise !== undefined){
-    playPromise.catch(function(){ doSwitch(); });
-  }
+  // Seek to 0 and play (preloaded — should be instant)
+  vid.currentTime = 0;
+  vid.play().catch(function(){ doSwitch(); });
 
   // Track progress
   function onProgress(){
     if(!vid.duration) return;
-    fill.style.width=((vid.currentTime/vid.duration)*100)+'%';
+    fill.style.width = ((vid.currentTime / vid.duration) * 100) + '%';
     if(vid.currentTime >= LOGO_SWITCH_AT){
-      vid.removeEventListener('timeupdate',onProgress);
+      vid.removeEventListener('timeupdate', onProgress);
       doSwitch();
     }
   }
-  vid.addEventListener('timeupdate',onProgress);
-  vid.addEventListener('ended',doSwitch);
+  vid.addEventListener('timeupdate', onProgress);
+  vid.addEventListener('ended', doSwitch);
 }
 
 
@@ -2304,18 +2296,35 @@ let _switching=false;
 function doSwitch(){
   if(_switching)return;
   _switching=true;
-  const lt=document.getElementById('logo-transition');
-  const vid=document.getElementById('logo-vid');
+  const lt    = document.getElementById('logo-transition');
+  const vid   = document.getElementById('logo-vid');
+  const modal = document.getElementById('project-modal');
+
   vid.pause();
-  lt.style.transition='opacity .3s ease';
-  lt.style.opacity='0';
-  document.getElementById('project-modal').classList.add('open');
-  setTimeout(()=>{
-    lt.classList.remove('active');
-    lt.style.opacity='';
-    lt.style.transition='';
-    _switching=false;
-  },320);
+
+  // Open modal instantly behind overlay (no flicker)
+  // Disable modal's own fade transition temporarily
+  modal.style.transition = 'none';
+  modal.style.opacity    = '1';
+  modal.classList.add('open');
+
+  // Tiny delay so modal is painted, THEN fade overlay out
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      lt.style.transition = 'opacity .5s ease';
+      lt.style.opacity    = '0';
+
+      setTimeout(function(){
+        lt.classList.remove('active');
+        lt.style.opacity    = '';
+        lt.style.transition = '';
+        // Restore modal transition for close animation
+        modal.style.transition = '';
+        modal.style.opacity    = '';
+        _switching = false;
+      }, 520);
+    });
+  });
 }
 
 
