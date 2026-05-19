@@ -1980,72 +1980,59 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 
 // ── LOGO TRANSITION ──
-const LOGO_SWITCH_AT = 9.5; // switch fast — feel like app launch
+const LOGO_SWITCH_AT = 7.0; // switch fast — feel like app launch
 
 function openModal(){
-  // Show logo transition first
-  const lt = document.getElementById('logo-transition');
+  const lt  = document.getElementById('logo-transition');
+  const vid = document.getElementById('logo-vid');
+  const fill= document.getElementById('logo-progress-fill');
+  const txt = document.getElementById('logo-loading-text');
+
+  // Show instantly
   lt.style.opacity='1';
   lt.classList.add('active');
   document.body.style.overflow='hidden';
-
-  const vid = document.getElementById('logo-vid');
-  const fill = document.getElementById('logo-progress-fill');
-  const txt  = document.getElementById('logo-loading-text');
-
-  // Reset
-  vid.currentTime = 0;
-  fill.style.width = '0%';
-
-  // Play
-  vid.play().catch(()=>{});
-
-  // Show loading text after 1s
   txt.classList.add('visible');
 
-  // Track progress
-  function onLogoProgress(){
-    const pct = (vid.currentTime / (vid.duration || 10)) * 100;
-    fill.style.width = pct + '%';
-    // Switch to modal at LOGO_SWITCH_AT seconds
-    if(vid.currentTime >= LOGO_SWITCH_AT){
-      vid.removeEventListener('timeupdate', onLogoProgress);
-      switchToModal();
+  // Reset + play
+  vid.currentTime=0;
+  fill.style.width='0%';
+  vid.play().catch(()=>{});
+
+  function onProgress(){
+    fill.style.width=((vid.currentTime/(vid.duration||10))*100)+'%';
+    if(vid.currentTime>=LOGO_SWITCH_AT){
+      vid.removeEventListener('timeupdate',onProgress);
+      doSwitch();
     }
   }
-  vid.addEventListener('timeupdate', onLogoProgress);
-  vid.addEventListener('ended', switchToModal);
+  vid.addEventListener('timeupdate',onProgress);
+  vid.addEventListener('ended',doSwitch);
 }
 
-let modalSwitched = false;
-function switchToModal(){
-  if(modalSwitched) return;
-  modalSwitched = true;
-
-  const lt = document.getElementById('logo-transition');
-  const vid = document.getElementById('logo-vid');
+let _switching=false;
+function doSwitch(){
+  if(_switching)return;
+  _switching=true;
+  const lt=document.getElementById('logo-transition');
+  const vid=document.getElementById('logo-vid');
   vid.pause();
-
-  // Fade out logo, fade in modal simultaneously
-  lt.style.transition = 'opacity .35s ease';
-  lt.style.opacity = '0';
-
-  // Open modal behind — instantly
+  // Fade out logo
+  lt.style.transition='opacity .25s ease';
+  lt.style.opacity='0';
+  // Open modal immediately
   document.getElementById('project-modal').classList.add('open');
-
   setTimeout(()=>{
     lt.classList.remove('active');
-    lt.style.opacity = '';
-    lt.style.transition = '';
-    modalSwitched = false;
+    lt.style.opacity='';
+    lt.style.transition='';
     document.getElementById('logo-loading-text').classList.remove('visible');
-  }, 380);
+    _switching=false;
+  },280);
 }
 
-function closeModal(){
-  document.getElementById('project-modal').classList.remove('open');
-  document.body.style.overflow='';
-}
+function switchToModal(){ doSwitch(); }
+
 
 // ── PROJECT MODAL ──</script>
 <!-- ══ PROJECT MODAL ══ -->
