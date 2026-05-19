@@ -2267,7 +2267,11 @@ function doSwitch(){
 function switchToModal(){ doSwitch(); }
 
 
-// ── PROJECT MODAL ──</script>
+// ── PROJECT MODAL ──
+function closeModal(){
+  document.getElementById('project-modal').classList.remove('open');
+  document.body.style.overflow='';
+}</script>
 <!-- ══ PROJECT MODAL ══ -->
 <div id="project-modal">
   <!-- Background orb that expands -->
