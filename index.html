@@ -1651,6 +1651,16 @@ function revealHero(){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
+  // Skip video on mobile — go straight to hero
+  if(window.innerWidth <= 768){
+    transitionDone=true;
+    const intro=document.getElementById('video-intro');
+    if(intro)intro.style.display='none';
+    document.body.style.overflow='';
+    revealHero();
+    return;
+  }
+
   const vid=document.getElementById('intro-vid');
   if(!vid)return;
   vid.addEventListener('timeupdate',()=>{
