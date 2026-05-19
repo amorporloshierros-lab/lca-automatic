@@ -2236,25 +2236,28 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   }
 
-  // Preload logo video aggressively — play silently in background so it's decoded and ready
+  // ── LOGO VIDEO: play FULL through silently on page load ──
+  // This fully warms the decoder so clicking "Empezar ahora" is instant
   var lv=document.getElementById('logo-vid');
   if(lv){
-    // On mobile, swap to mobile HQ version
-    if(window.innerWidth <= 768){
-      var mobLogoSrc=lv.querySelector('source').getAttribute('data-mobile-src') ||
-                     lv.getAttribute('data-mobile-src');
-      // The mobile src is embedded as data-mobile-src attribute on the source tag
-    }
-    // Preload silently on ALL devices — decode now, play instantly on click
-    lv.style.visibility='hidden';
-    lv.muted=true;
+    lv.muted    = true;
+    lv.loop     = false;
+    lv.style.visibility = 'hidden';
+    lv.style.pointerEvents = 'none';
     lv.load();
+
     lv.play().then(function(){
-      lv.pause();
-      lv.currentTime=0;
-      lv.style.visibility='';
+      // Playing silently — let it run to completion
+      lv.addEventListener('ended', function onSilentEnd(){
+        lv.removeEventListener('ended', onSilentEnd);
+        lv.currentTime = 0;       // rewind to start
+        lv.style.visibility = ''; // ready
+        lv._decoded = true;       // flag: fully decoded
+      });
     }).catch(function(){
+      // Autoplay blocked — at least buffer it
       lv.load();
+      lv.style.visibility = '';
     });
   }
 });
@@ -2274,8 +2277,10 @@ function openModal(){
   document.body.style.overflow = 'hidden';
   fill.style.width = '0%';
 
-  // Seek to 0 and play (preloaded — should be instant)
-  vid.currentTime = 0;
+  // Video fully pre-decoded — seek to start and launch instantly
+  if(vid._decoded){
+    vid.currentTime = 0;
+  }
   vid.play().catch(function(){ doSwitch(); });
 
   // Track progress
