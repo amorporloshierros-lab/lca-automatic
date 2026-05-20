@@ -2237,7 +2237,7 @@ gsap.utils.toArray('.section-eyebrow').forEach(function(el){
 });
 
 (function(){
-  const lines=['Nuevo lead: lucas@empresa.com','CRM actualizado ✓','Email de bienvenida enviado ✓','Reunión agendada: Martes 10hs ✓','Seguimiento en +3 días ✓'];
+  const lines=['Nuevo lead: LCA.automatic@gmail.com','CRM actualizado ✓','Email de bienvenida enviado ✓','Reunión agendada: Martes 10hs ✓','Seguimiento en +3 días ✓'];
   let li=0,ci=0,full='';
   const el=document.getElementById('tw-text');
   if(!el)return;
@@ -2296,7 +2296,7 @@ function submitForm(){
 }
 
 function scrollTo(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth'});}
-function openWA(){window.open('https://wa.me/5491112345678?text=Hola%21%20Quiero%20saber%20m%C3%A1s%20sobre%20sus%20servicios%20web.','_blank');}
+function openWA(){window.open('https://wa.me/5491139538418?text=Hola%21%20Quiero%20saber%20m%C3%A1s%20sobre%20sus%20servicios%20web.','_blank');}
 function openCal(){window.open('https://calendly.com','_blank');}
 
 let bubbleTimer;
@@ -2333,7 +2333,7 @@ const botAnswers={
   'tiempo':'⏱ <strong>21 días exactos</strong>. Garantizado.',
   'tardan':'⏱ 21 días. Día 1–2 discovery, 3–7 diseño, 8–16 desarrollo, 17–21 launch.',
   'asesor':'🧑‍💼 Te conectamos ahora. ¿WhatsApp o Calendly?',
-  'whatsapp':'📱 Escribinos: <strong>+54 9 11 1234-5678</strong>. Lunes a sábado.',
+  'whatsapp':'📱 Escribinos: <strong>+54 9 11 3953-8418</strong>. Lunes a sábado.',
   'web':'🌐 Webs premium con animaciones y conversión desde el primer wireframe.',
   'automatización':'⚡ CRM, emails automáticos y flujos de seguimiento incluidos.',
   'default':'😊 ¿Preferís WhatsApp o el formulario? Respondemos en menos de 24hs.'
@@ -2514,7 +2514,7 @@ function runSearchAnimation(){
   // Lock-on
   var LOCK=126, LOCK_END=182;
   // Single jump — arranca directo hacia TX,TY, sin fase de warp en el centro
-  var JUMP=172, JUMP_END=255;
+  var JUMP=172, JUMP_END=272;  // lights run until the very last frame
   var BURST=252, DONE=272;
 
   var t=0, finished=false, raf;
@@ -2632,10 +2632,13 @@ function runSearchAnimation(){
       ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(TX,TY,gR,0,Math.PI*2); ctx.fill();
     }
 
-    // ── BURST ─────────────────────────────────────
+    // ── LLEGADA — la velocidad sigue hasta el final, fade suave sin destello ──
     if(t>=BURST){
-      var bp=ss((t-BURST)/(DONE-BURST));
-      ctx.fillStyle='rgba(250,248,240,'+bp+')'; ctx.fillRect(0,0,W,H);
+      // El salto continúa — las luces siguen pasando (el JUMP corre hasta JUMP_END=255)
+      // Solo se agrega un fade sutil al fondo, sin flash de sol blanco
+      var bp = ss((t-BURST)/(DONE-BURST));
+      // Oscurecer levemente hacia negro (como entrar al nodo) — no destello blanco
+      ctx.fillStyle='rgba(13,13,18,'+( bp*.88)+')'; ctx.fillRect(0,0,W,H);
     }
 
     if(t>=DONE && !finished){
