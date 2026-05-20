@@ -140,8 +140,10 @@ body{background:var(--bg);color:var(--ivory);font-family:'Inter',sans-serif;over
 .hero-sub{font-size:clamp(16px,1.8vw,20px);color:rgba(250,248,245,.65);max-width:560px;line-height:1.8;margin-bottom:48px}
 .hero-sub strong{color:var(--gold2)}
 .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:72px}
-.btn-hero-primary{background:var(--gold);color:#000;border:none;font-weight:700;font-size:16px;font-family:'Inter',sans-serif;padding:16px 34px;border-radius:100px;cursor:pointer;transition:background .2s,transform .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-hero-primary{background:var(--gold);color:#000;border:none;font-weight:700;font-size:16px;font-family:'Inter',sans-serif;padding:16px 34px;border-radius:100px;cursor:pointer;transition:background .2s,transform .2s;display:inline-flex;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .btn-hero-primary:hover{background:var(--gold2);transform:scale(1.03)}
+.btn-hero-primary:active{transform:scale(0.97);background:var(--gold2)}
+@media(hover:none){.btn-hero-primary:hover{transform:none;background:var(--gold)}}
 .btn-hero-wa{background:transparent;color:var(--ivory);border:1px solid var(--border);font-weight:600;font-size:16px;font-family:'Inter',sans-serif;padding:16px 32px;border-radius:100px;cursor:pointer;transition:background .3s,color .3s,transform .2s;display:inline-flex;align-items:center;gap:8px}
 .btn-hero-wa:hover{background:var(--gold);color:#000;border-color:var(--gold);transform:scale(1.03)}
 .hero-stats{display:flex;gap:52px;flex-wrap:wrap}
@@ -966,6 +968,29 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
 }
 /* Modal appears after vortex */
 #project-modal.open{transition:none}
+@media(max-width:768px){
+  /* On mobile: solid bg (no hero canvas behind), nodes in 2x2 grid */
+  #network-select.active{
+    background:#0D0D12 !important;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:0;
+  }
+  .ns-title{
+    position:relative;top:auto;left:auto;transform:none;
+    margin-bottom:32px;font-size:11px;
+  }
+  .ns-node{
+    position:relative !important;
+    top:auto !important;left:auto !important;
+    right:auto !important;bottom:auto !important;
+  }
+  #ns-nodes-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:32px 24px;
+  }
+}
 </style>
 </head>
 <body>
@@ -1995,28 +2020,44 @@ function doTransition(){
   const vid=document.getElementById('intro-vid');
   const overlay=document.getElementById('intro-overlay');
   const intro=document.getElementById('video-intro');
+
+  // Pre-init hero canvas NOW so it's ready when intro disappears
+  initCanvas();
+
   vid.classList.add('fading');
   overlay.classList.add('fading');
   setTimeout(()=>{
-    intro.style.display='none';
+    // Use visibility:hidden instead of display:none → no reflow, no layout jump
+    intro.style.visibility='hidden';
+    intro.style.pointerEvents='none';
     document.body.style.overflow='';
     revealHero();
-  },3100);
+  },2800);
 }
 
 function revealHero(){
   document.getElementById('header').classList.add('visible');
   setTimeout(()=>{
     document.getElementById('hero-content').classList.add('visible');
-    document.getElementById('scroll-hint').classList.add('visible');
-    initCanvas();
-    ScrollTrigger.refresh();
+    var sh = document.getElementById('scroll-hint');
+    if(sh) sh.classList.add('visible');
+    // initCanvas already called in doTransition; guard against double-init
+    if(!window._canvasInited) initCanvas();
+    // ScrollTrigger.refresh removed — caused layout jump on mobile
+    setTimeout(()=>{ if(typeof ScrollTrigger!=='undefined') ScrollTrigger.refresh(); }, 600);
   },200);
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
   const vid=document.getElementById('intro-vid');
   if(!vid)return;
+
+  // ── Swap to mobile source FIRST before any play() ──
+  if(window.innerWidth<=768){
+    var mobSrc=vid.getAttribute('data-mobile-src');
+    if(mobSrc){ vid.querySelector('source').src=mobSrc; vid.load(); }
+  }
+
   vid.addEventListener('timeupdate',()=>{
     const t=vid.currentTime,d=vid.duration||FADE_END;
     const fill=document.getElementById('intro-bar-fill');
@@ -2029,6 +2070,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 setTimeout(()=>{if(!transitionDone){transitionDone=true;document.getElementById('video-intro').style.display='none';revealHero();}},9000);
 
 function initCanvas(){
+  if(window._canvasInited)return;
+  window._canvasInited=true;
   const canvas=document.getElementById('hero-canvas');
   if(!canvas)return;
   const ctx=canvas.getContext('2d');
@@ -2338,20 +2381,7 @@ document.addEventListener('DOMContentLoaded',function(){
   var modal=document.getElementById('project-modal');
   if(modal) modal.addEventListener('click',function(e){if(e.target===this)closeModal();});
 
-  // Preload logo video so it plays instantly on click
-  // On mobile: swap to mobile video BEFORE playing (no desktop flash)
-  var iv=document.getElementById('intro-vid');
-  if(iv){
-    if(window.innerWidth<=768){
-      var mobSrc=iv.getAttribute('data-mobile-src');
-      if(mobSrc){
-        iv.querySelector('source').src=mobSrc;
-        iv.load();
-      }
-    }
-    // Now play (we removed autoplay, so we control this)
-    iv.play().catch(function(){});
-  }
+  // intro-vid is already playing from first DOMContentLoaded handler
 
   // ── LOGO VIDEO: play FULL through silently on page load ──
   // This fully warms the decoder so clicking "Empezar ahora" is instant
@@ -2427,244 +2457,260 @@ const LOGO_SWITCH_AT = 6.0; // switch fast — feel like app launch
 //  ONE WORLD — hero reveals neural bg, warp in same space
 // ═══════════════════════════════════════════
 function openModal(){
-  const heroCanvas = document.getElementById('hero-canvas');
-  const heroEl     = document.getElementById('hero-content');
-  const header     = document.getElementById('header');
+  var heroEl     = document.getElementById('hero-content');
+  var header     = document.getElementById('header');
+  var heroCanvas = document.getElementById('hero-canvas');
 
-  document.body.style.overflow='hidden';
+  if(document.activeElement) document.activeElement.blur();
+  document.body.style.overflow = 'hidden';
 
-  // Fade hero text + header
-  if(heroEl){ heroEl.style.transition='opacity 0.8s ease'; heroEl.style.opacity='0'; }
-  if(header){ header.style.transition='opacity 0.6s ease'; header.style.opacity='0'; }
+  // Fade text and header — canvas stays visible
+  if(heroEl){ heroEl.style.transition='opacity 0.6s ease'; heroEl.style.opacity='0'; }
+  if(header){ header.style.transition='opacity 0.5s ease'; header.style.opacity='0'; }
 
-  // Expand neural canvas to fullscreen seamlessly
+  // Expand neural canvas to fullscreen (it becomes the background for everything)
   if(heroCanvas){
-    heroCanvas.style.transition='all 0.5s ease';
-    heroCanvas.style.position='fixed';
-    heroCanvas.style.inset='0';
-    heroCanvas.style.zIndex='29996';
-    heroCanvas.style.width='100vw';
-    heroCanvas.style.height='100vh';
-    heroCanvas.style.opacity='1';
+    heroCanvas.style.transition  = 'all 0.5s ease';
+    heroCanvas.style.position    = 'fixed';
+    heroCanvas.style.inset       = '0';
+    heroCanvas.style.zIndex      = '29996';
+    heroCanvas.style.width       = '100vw';
+    heroCanvas.style.height      = '100vh';
+    heroCanvas.style.transformOrigin = '50% 50%';
   }
 
-  // Show network selection overlay after canvas expands
-  setTimeout(function(){
-    const ns = document.getElementById('network-select');
-    ns.classList.add('active');
-    // Draw connecting lines between nodes after they're visible
-    setTimeout(drawNsLines, 80);
-  }, 520);
+  // Begin animation once hero text is gone
+  setTimeout(runSearchAnimation, 650);
 }
 
-// Draw faint SVG lines connecting all 4 nodes
-function drawNsLines(){
-  const svg   = document.getElementById('ns-svg-lines');
-  const nodes = document.querySelectorAll('#network-select .ns-node');
-  const pts   = Array.from(nodes).map(function(n){
-    const r = n.querySelector('.ns-core').getBoundingClientRect();
-    return { x: r.left + r.width/2, y: r.top + r.height/2 };
-  });
-  let lines = '';
-  for(var i=0;i<pts.length;i++){
-    for(var j=i+1;j<pts.length;j++){
-      lines += '<line x1="'+pts[i].x+'" y1="'+pts[i].y+'" x2="'+pts[j].x+'" y2="'+pts[j].y
-             + '" stroke="rgba(201,168,76,0.13)" stroke-width="0.8" stroke-dasharray="4,8"/>';
-    }
-  }
-  svg.innerHTML = lines;
-}
+function runSearchAnimation(){
+  var heroCanvas = document.getElementById('hero-canvas');
+  var overlay    = document.getElementById('vortex-overlay');
+  var vc         = document.getElementById('vortex-canvas');
+  var ctx        = vc.getContext('2d');
 
-// Called when user clicks a network node
-function selectNetwork(chipName, el){
-  const ns = document.getElementById('network-select');
+  var W = window.innerWidth, H = window.innerHeight;
+  vc.width = W; vc.height = H;
+  var CX = W/2, CY = H/2;
+  var isMobile = W <= 768;
 
-  // Get exact screen position of clicked node for warp target
-  const core = el.querySelector('.ns-core');
-  const rect  = core.getBoundingClientRect();
-  const TX = rect.left + rect.width  / 2;
-  const TY = rect.top  + rect.height / 2;
-
-  // Pre-select matching chip in modal
-  document.querySelectorAll('.modal-chip').forEach(function(c){
-    const matches = c.textContent.toLowerCase().indexOf(chipName.toLowerCase()) !== -1;
-    c.classList.toggle('active', matches);
-  });
-
-  // Fade out network select
-  ns.style.transition = 'opacity 0.28s ease';
-  ns.style.opacity    = '0';
-  setTimeout(function(){
-    ns.classList.remove('active');
-    ns.style.opacity    = '';
-    ns.style.transition = '';
-  }, 300);
-
-  // Launch warp toward selected node
-  launchWarpToNode(TX, TY);
-}
-
-function launchWarpToNode(TX, TY){
-  const overlay = document.getElementById('vortex-overlay');
-  const vc      = document.getElementById('vortex-canvas');
-  const ctx     = vc.getContext('2d');
-
-  vc.width  = window.innerWidth;
-  vc.height = window.innerHeight;
-  const W=vc.width, H=vc.height, CX=W/2, CY=H/2;
-
-  overlay.style.transition = 'none';
-  overlay.style.opacity    = '1';
+  // Transparent overlay — hero canvas shows through underneath
   overlay.style.background = 'transparent';
+  overlay.style.opacity    = '1';
+  overlay.style.transition = 'none';
   overlay.classList.add('active');
 
-  // Gold warp streaks
-  const PALETTE=[[201,168,76],[228,201,123],[250,248,245],[180,140,55],[240,220,150]];
-  const streaks=Array.from({length:180},function(){
-    const c=PALETTE[Math.floor(Math.random()*PALETTE.length)];
-    const primary=Math.random()>0.3;
-    return{
-      angle:Math.random()*Math.PI*2,
-      speed:5+Math.random()*15,
-      len:0.05+Math.random()*0.13,
-      alpha:(primary?0.4:0.15)+Math.random()*0.3,
-      width:primary?(0.5+Math.random()*1.6):(0.3+Math.random()*0.6),
-      dist:Math.random()*20,
-      color:c,
-      glow:primary&&Math.random()>0.5,
-    };
+  // 3 scan targets — safe margin, well spread
+  var mg = isMobile ? 80 : 110;
+  var scanPts = [
+    { x: mg + Math.random()*(W*.38-mg),   y: mg + Math.random()*(H*.32-mg)   },
+    { x: W*.56 + Math.random()*(W*.36-mg), y: mg + Math.random()*(H*.32-mg)   },
+    { x: W*.22 + Math.random()*(W*.52),    y: H*.52 + Math.random()*(H*.28-mg) }
+  ];
+  var TX = scanPts[2].x, TY = scanPts[2].y;
+
+  // Warp streaks (gold)
+  var PAL = [[201,168,76],[228,201,123],[250,248,245],[180,140,55],[240,220,150]];
+  var streaks = Array.from({length: isMobile?110:170}, function(){
+    var c=PAL[Math.floor(Math.random()*PAL.length)], p=Math.random()>.3;
+    return{ angle:Math.random()*Math.PI*2, speed:5+Math.random()*15,
+            len:.05+Math.random()*.13, alpha:(p?.4:.15)+Math.random()*.3,
+            width:p?(.5+Math.random()*1.5):(.3+Math.random()*.5),
+            dist:Math.random()*20, color:c, glow:p&&Math.random()>.5 };
   });
 
-  const diveS=Array.from({length:80},function(){
-    return{
-      angle:Math.random()*Math.PI*2,
-      dist:W*0.28+Math.random()*W*0.55,
-      speed:2+Math.random()*3.5,
-      len:0.07+Math.random()*0.1,
-      alpha:0.4+Math.random()*0.4
-    };
-  });
+  // ── Timings (frames @ 60fps) ──
+  // zoom punch: 15fr zoom-in · 8fr hold · 12fr zoom-out = 35fr each
+  // gap between punches: 15fr
+  var Z0 = 10,  Z0h = 25, Z0o = 33, Z0e = 45;    // zoom 1
+  var Z1 = 60,  Z1h = 75, Z1o = 83, Z1e = 95;    // zoom 2
+  var Z2 = 110, Z2h = 125; // zoom 3 — zooms in and STAYS
+  var LOCK = 125;           // lock-on glow starts
+  var WARP = 168, WPEAK=196, WFADE=194, WEND=224;
+  var DIVE = 210, DEND = 254;
+  var BURST= 254, DONE = 274;
 
-  // Warp origin slightly biased toward the target
-  const wCX = CX + (TX-CX)*0.25;
-  const wCY = CY + (TY-CY)*0.25;
+  var t=0, finished=false, raf;
 
-  // Phase timings — warp starts immediately
-  const P={
-    warpStart:0, warpPeak:28, warpFade:26, warpEnd:52,
-    dive:52,     diveEnd:86,
-    burst:86,    done:104
-  };
-
-  let t=0, finished=false, raf;
   function lerp(a,b,v){return a+(b-a)*v;}
-  function clamp(v,a,b){return Math.min(b,Math.max(a,v));}
-  function smoothstep(x){x=clamp(x,0,1);return x*x*(3-2*x);}
+  function clamp(v,lo,hi){return Math.min(hi,Math.max(lo,v));}
+  function ss(x){x=clamp(x,0,1);return x*x*(3-2*x);}
   function easeIn(x,e){return Math.pow(clamp(x,0,1),e||2);}
 
+  // Apply CSS zoom to hero canvas toward a screen point
+  function setHeroZoom(px, py, scale){
+    if(!heroCanvas) return;
+    // transform-origin at the target point, then scale
+    heroCanvas.style.transformOrigin = px+'px '+py+'px';
+    heroCanvas.style.transform       = 'scale('+scale+')';
+  }
+
   function draw(){
-    t++; if(finished)return;
+    t++; if(finished) return;
+
+    // Clear vortex canvas each frame (transparent)
     ctx.clearRect(0,0,W,H);
 
-    // ── WARP STREAKS ──
-    if(t<P.warpEnd){
-      const wIn  = smoothstep(clamp((t-P.warpStart)/(P.warpPeak-P.warpStart),0,1));
-      const wOut = 1-smoothstep(clamp((t-P.warpFade)/(P.warpEnd-P.warpFade),0,1));
-      const wA   = wIn*wOut;
-      if(wA>0.01){
-        ctx.fillStyle='rgba(8,6,14,'+(wA*0.52)+')';
-        ctx.fillRect(0,0,W,H);
+    // ─── ZOOM PUNCH 1 ───────────────────────────────
+    if(t >= Z0 && t < Z0e){
+      var s = t < Z0h ? ss(clamp((t-Z0)/(Z0h-Z0),0,1))
+            : t < Z0o ? 1
+            : 1 - ss(clamp((t-Z0o)/(Z0e-Z0o),0,1));
+      setHeroZoom(scanPts[0].x, scanPts[0].y, lerp(1, 2.6, s));
+      // Brief glow at node (drawn on vortex canvas in screen coords — node stays at scanPts[0] since it's the transform origin)
+      if(s > .3){
+        var ga = s*.55;
+        var gr = ctx.createRadialGradient(scanPts[0].x,scanPts[0].y,0,scanPts[0].x,scanPts[0].y,isMobile?32:44);
+        gr.addColorStop(0,'rgba(255,250,180,'+ga+')'); gr.addColorStop(1,'rgba(201,168,76,0)');
+        ctx.beginPath(); ctx.arc(scanPts[0].x,scanPts[0].y,isMobile?32:44,0,Math.PI*2);
+        ctx.fillStyle=gr; ctx.fill();
+      }
+    }
+    if(t === Z0e) setHeroZoom(CX, CY, 1); // reset
+
+    // ─── ZOOM PUNCH 2 ───────────────────────────────
+    if(t >= Z1 && t < Z1e){
+      var s = t < Z1h ? ss(clamp((t-Z1)/(Z1h-Z1),0,1))
+            : t < Z1o ? 1
+            : 1 - ss(clamp((t-Z1o)/(Z1e-Z1o),0,1));
+      setHeroZoom(scanPts[1].x, scanPts[1].y, lerp(1, 2.6, s));
+      if(s > .3){
+        var ga = s*.55;
+        var gr = ctx.createRadialGradient(scanPts[1].x,scanPts[1].y,0,scanPts[1].x,scanPts[1].y,isMobile?32:44);
+        gr.addColorStop(0,'rgba(255,250,180,'+ga+')'); gr.addColorStop(1,'rgba(201,168,76,0)');
+        ctx.beginPath(); ctx.arc(scanPts[1].x,scanPts[1].y,isMobile?32:44,0,Math.PI*2);
+        ctx.fillStyle=gr; ctx.fill();
+      }
+    }
+    if(t === Z1e) setHeroZoom(CX, CY, 1); // reset
+
+    // ─── ZOOM PUNCH 3 — zooms in, STAYS, locks on ────
+    if(t >= Z2 && t < WARP){
+      var zoomIn = ss(clamp((t-Z2)/(Z2h-Z2),0,1));
+      var zScale = lerp(1, 2.8, zoomIn); // stays at 2.8 after Z2h
+      setHeroZoom(TX, TY, Math.min(zScale, 2.8));
+
+      // Lock-on pulse rings (drawn on vortex canvas)
+      if(t >= LOCK){
+        var lp = clamp((t-LOCK)/28, 0, 1);
+        for(var ri=0;ri<2;ri++){
+          var rp = ((t*1.8 + ri*26) % 52) / 52;
+          ctx.beginPath(); ctx.arc(TX,TY,lerp(4, isMobile?28:38, rp),0,Math.PI*2);
+          ctx.strokeStyle='rgba(201,168,76,'+(lp*(1-rp)*.8)+')';
+          ctx.lineWidth=1.6; ctx.stroke();
+        }
+        var gr=ctx.createRadialGradient(TX,TY,0,TX,TY,isMobile?22:30);
+        gr.addColorStop(0,'rgba(255,252,200,'+(lp*.45)+')'); gr.addColorStop(1,'rgba(201,168,76,0)');
+        ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(TX,TY,isMobile?22:30,0,Math.PI*2); ctx.fill();
+      }
+    }
+
+    // ─── WARP STREAKS — centro se mueve progresivamente hacia TX,TY ──
+    if(t >= WARP && t < WEND){
+      var wProg = clamp((t-WARP)/(WEND-WARP),0,1);
+      var wIn   = ss(clamp((t-WARP)/(WPEAK-WARP),0,1));
+      var wOut  = 1-ss(clamp((t-WFADE)/(WEND-WFADE),0,1));
+      var wA    = wIn*wOut;
+      if(wA > .01){
+        ctx.fillStyle='rgba(8,6,14,'+(wA*.55)+')'; ctx.fillRect(0,0,W,H);
+        // Centro del warp viaja de (CX,CY) → (TX,TY) a medida que avanza
+        var wCX=lerp(CX, TX, ss(wProg)), wCY=lerp(CY, TY, ss(wProg));
         streaks.forEach(function(s){
-          s.dist+=s.speed*(0.12+wA*1.5);
-          if(s.dist>Math.max(W,H)*0.85) s.dist=Math.random()*18;
-          const x1=wCX+Math.cos(s.angle)*s.dist;
-          const y1=wCY+Math.sin(s.angle)*s.dist;
-          const tl=s.dist*s.len*(0.3+wA*1.8);
-          const x2=wCX+Math.cos(s.angle)*(s.dist-tl);
-          const y2=wCY+Math.sin(s.angle)*(s.dist-tl);
-          const r=s.color[0],g=s.color[1],b=s.color[2];
-          const a=s.alpha*wA;
+          s.dist += s.speed*(.1+wA*1.6);
+          if(s.dist > Math.max(W,H)*.9) s.dist=Math.random()*16;
+          var x1=wCX+Math.cos(s.angle)*s.dist, y1=wCY+Math.sin(s.angle)*s.dist;
+          var tl=s.dist*s.len*(.28+wA*2);
+          var x2=wCX+Math.cos(s.angle)*(s.dist-tl), y2=wCY+Math.sin(s.angle)*(s.dist-tl);
+          var r=s.color[0],g=s.color[1],b=s.color[2],aa=s.alpha*wA;
           if(s.glow){
-            const gg=ctx.createLinearGradient(x2,y2,x1,y1);
-            gg.addColorStop(0,'rgba('+r+','+g+','+b+',0)');
-            gg.addColorStop(1,'rgba('+r+','+g+','+b+','+(a*0.2)+')');
-            ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x1,y1);
-            ctx.strokeStyle=gg;ctx.lineWidth=s.width*3.5;ctx.stroke();
+            var gg=ctx.createLinearGradient(x2,y2,x1,y1);
+            gg.addColorStop(0,'rgba('+r+','+g+','+b+',0)'); gg.addColorStop(1,'rgba('+r+','+g+','+b+','+(aa*.22)+')');
+            ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x1,y1);ctx.strokeStyle=gg;ctx.lineWidth=s.width*3.5;ctx.stroke();
           }
-          const sg=ctx.createLinearGradient(x2,y2,x1,y1);
-          sg.addColorStop(0,'rgba('+r+','+g+','+b+',0)');
-          sg.addColorStop(1,'rgba('+r+','+g+','+b+','+a+')');
-          ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x1,y1);
-          ctx.strokeStyle=sg;ctx.lineWidth=s.width;ctx.stroke();
+          var sg=ctx.createLinearGradient(x2,y2,x1,y1);
+          sg.addColorStop(0,'rgba('+r+','+g+','+b+',0)'); sg.addColorStop(1,'rgba('+r+','+g+','+b+','+aa+')');
+          ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x1,y1);ctx.strokeStyle=sg;ctx.lineWidth=s.width;ctx.stroke();
         });
-        // Core glow at warp origin
-        const cr=lerp(2,36,wA);
-        const cg=ctx.createRadialGradient(wCX,wCY,0,wCX,wCY,cr*3.2);
-        cg.addColorStop(0,'rgba(255,252,230,'+(wA*0.88)+')');
-        cg.addColorStop(0.35,'rgba(228,201,123,'+(wA*0.38)+')');
-        cg.addColorStop(1,'rgba(13,13,18,0)');
-        ctx.beginPath();ctx.arc(wCX,wCY,cr*3.2,0,Math.PI*2);ctx.fillStyle=cg;ctx.fill();
-        ctx.beginPath();ctx.arc(wCX,wCY,cr*0.18,0,Math.PI*2);
-        ctx.fillStyle='rgba(255,255,248,'+(wA*0.85)+')';ctx.fill();
+        // Núcleo brillante en el punto de destino
+        var cr=lerp(2,32,wA);
+        var cg=ctx.createRadialGradient(wCX,wCY,0,wCX,wCY,cr*3);
+        cg.addColorStop(0,'rgba(255,252,230,'+(wA*.92)+')'); cg.addColorStop(.35,'rgba(228,201,123,'+(wA*.4)+')'); cg.addColorStop(1,'rgba(13,13,18,0)');
+        ctx.beginPath();ctx.arc(wCX,wCY,cr*3,0,Math.PI*2);ctx.fillStyle=cg;ctx.fill();
+        ctx.beginPath();ctx.arc(wCX,wCY,cr*.14,0,Math.PI*2);ctx.fillStyle='rgba(255,255,248,'+(wA*.95)+')';ctx.fill();
       }
     }
 
-    // ── DIVE ZOOM toward the selected node ──
-    if(t>=P.dive && t<P.diveEnd){
-      const spE=easeIn(smoothstep((t-P.dive)/(P.diveEnd-P.dive)),2);
-      const cS=lerp(1,20,spE);
-      const ox=lerp(0,-(TX-W/2)*(cS-1),spE);
-      const oy=lerp(0,-(TY-H/2)*(cS-1),spE);
-      ctx.save();
-      ctx.translate(W/2+ox,H/2+oy);ctx.scale(cS,cS);ctx.translate(-W/2,-H/2);
-      diveS.forEach(function(s){
-        s.dist=Math.max(2,s.dist-s.speed*(1+spE*11));
-        if(s.dist<2) s.dist=W*0.28+Math.random()*W*0.5;
-        const x1=TX+Math.cos(s.angle)*s.dist;
-        const y1=TY+Math.sin(s.angle)*s.dist;
-        const x2=TX+Math.cos(s.angle)*(s.dist*(1+s.len));
-        const y2=TY+Math.sin(s.angle)*(s.dist*(1+s.len));
-        const g=ctx.createLinearGradient(x2,y2,x1,y1);
-        g.addColorStop(0,'rgba(255,248,180,0)');
-        g.addColorStop(1,'rgba(255,220,100,'+(s.alpha*spE)+')');
-        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
-        ctx.strokeStyle=g;ctx.lineWidth=0.7+spE*1.4;ctx.stroke();
-      });
-      ctx.restore();
-    }
+    // ─── DIVE — CSS zoom hacia TX,TY + líneas que CONVERGEN en TX,TY ──
+    if(t >= DIVE && t < DEND){
+      var spE  = easeIn(ss((t-DIVE)/(DEND-DIVE)), 2.5);
+      var cS   = lerp(2.8, 28, spE);
+      // CSS: mantiene TX,TY fijo y escala alrededor
+      setHeroZoom(TX, TY, cS);
 
-    // ── WHITE BURST → opens form ──
-    if(t>=P.burst){
-      const bp=smoothstep((t-P.burst)/(P.done-P.burst));
-      ctx.fillStyle='rgba(250,248,240,'+bp+')';ctx.fillRect(0,0,W,H);
-    }
+      // Vignette oscuro desde los bordes hacia TX,TY
+      var maxR = Math.sqrt(Math.max(TX,W-TX)*Math.max(TX,W-TX) + Math.max(TY,H-TY)*Math.max(TY,H-TY));
+      var vg = ctx.createRadialGradient(TX,TY,maxR*(1-spE*.55),TX,TY,maxR);
+      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,'+(spE*.75)+')');
+      ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
 
-    if(t>=P.done && !finished){
-      finished=true; cancelAnimationFrame(raf);
-      const heroEl    = document.getElementById('hero-content');
-      const header    = document.getElementById('header');
-      const heroCanvas= document.getElementById('hero-canvas');
-      if(heroEl){heroEl.style.transition='';heroEl.style.opacity='';}
-      if(header){header.style.transition='';header.style.opacity='';}
-      if(heroCanvas){
-        heroCanvas.style.transition='';heroCanvas.style.position='';
-        heroCanvas.style.inset='';heroCanvas.style.zIndex='';
-        heroCanvas.style.width='';heroCanvas.style.height='';
+      // Líneas de velocidad que CONVERGEN hacia TX,TY
+      // Salen de fuera de pantalla y terminan cerca de TX,TY
+      var nLines = isMobile ? 60 : 90;
+      for(var li=0; li<nLines; li++){
+        var ang   = (li/nLines)*Math.PI*2;
+        var farR  = maxR*1.1;                      // origen: fuera de pantalla
+        var nearR = 10 + spE*spE*90;               // cola: se acerca a TX,TY a velocidad
+
+        var lxFar = TX+Math.cos(ang)*farR,  lyFar = TY+Math.sin(ang)*farR;   // fuera de pantalla
+        var lxNear= TX+Math.cos(ang)*nearR, lyNear= TY+Math.sin(ang)*nearR;  // cerca del nodo
+
+        // Gradiente: brillante CERCA de TX,TY, transparente en los bordes
+        // → visual: todas las líneas apuntan y brillan EN TX,TY
+        var gl=ctx.createLinearGradient(lxFar,lyFar,lxNear,lyNear);
+        gl.addColorStop(0,'rgba(255,248,180,0)');
+        gl.addColorStop(.7,'rgba(255,240,140,'+(spE*.35)+')');
+        gl.addColorStop(1,'rgba(255,225,110,'+(spE*.75)+')');
+        ctx.beginPath(); ctx.moveTo(lxFar,lyFar); ctx.lineTo(lxNear,lyNear);
+        ctx.strokeStyle=gl; ctx.lineWidth=.55+spE*1.45; ctx.stroke();
       }
-      const modal=document.getElementById('project-modal');
-      modal.style.transition='none';modal.style.opacity='1';modal.classList.add('open');
-      overlay.style.transition='opacity .4s ease';overlay.style.opacity='0';
+
+      // Glow en el punto destino — el nodo que se va a "entrar"
+      var tgr=ctx.createRadialGradient(TX,TY,0,TX,TY,lerp(20,55,spE));
+      tgr.addColorStop(0,'rgba(255,252,210,'+(spE*.85)+')'); tgr.addColorStop(1,'rgba(201,168,76,0)');
+      ctx.fillStyle=tgr; ctx.beginPath(); ctx.arc(TX,TY,lerp(20,55,spE),0,Math.PI*2); ctx.fill();
+    }
+
+    // ─── WHITE BURST ────────────────────────────────
+    if(t >= BURST){
+      var bp = ss((t-BURST)/(DONE-BURST));
+      ctx.fillStyle='rgba(250,248,240,'+bp+')'; ctx.fillRect(0,0,W,H);
+    }
+
+    if(t >= DONE && !finished){
+      finished = true; cancelAnimationFrame(raf);
+      var he=document.getElementById('hero-content'), hd=document.getElementById('header');
+      var hc=document.getElementById('hero-canvas');
+      if(he){he.style.transition='';he.style.opacity='';}
+      if(hd){hd.style.transition='';hd.style.opacity='';}
+      if(hc) hc.style.cssText='';
+      var ov2=document.getElementById('vortex-overlay');
+      var modal=document.getElementById('project-modal');
+      modal.style.transition='none'; modal.style.opacity='1'; modal.classList.add('open');
+      ov2.style.transition='opacity .4s ease'; ov2.style.opacity='0';
       setTimeout(function(){
-        overlay.classList.remove('active');
-        overlay.style.opacity='';overlay.style.transition='';
-        modal.style.transition='';modal.style.opacity='';
-      },500);
+        ov2.classList.remove('active'); ov2.style.cssText='';
+        modal.style.transition=''; modal.style.opacity='';
+        document.body.style.overflow='';
+      }, 500);
       return;
     }
-    raf=requestAnimationFrame(draw);
+    raf = requestAnimationFrame(draw);
   }
-  raf=requestAnimationFrame(draw);
+  raf = requestAnimationFrame(draw);
 }
+
+
+
 
 // ── PROJECT MODAL ──
 function closeModal(){
@@ -2807,46 +2853,5 @@ function closeModal(){
   <div id="logo-progress"><div id="logo-progress-fill"></div></div>
 </div>
 
-<!-- ══ NETWORK SELECT ══ -->
-<div id="network-select">
-  <svg id="ns-svg-lines" xmlns="http://www.w3.org/2000/svg"></svg>
-  <div class="ns-title">— Seleccioná tu red —</div>
-
-  <div class="ns-node" data-pos="tl" style="top:24%;left:14%"
-       onclick="selectNetwork('Diseño Web',this)">
-    <div class="ns-dot-wrap">
-      <div class="ns-ring1"></div><div class="ns-ring2"></div>
-      <div class="ns-core">🌐</div>
-    </div>
-    <span class="ns-label">Diseño Web</span>
-  </div>
-
-  <div class="ns-node" data-pos="tr" style="top:21%;right:15%"
-       onclick="selectNetwork('Automatización',this)">
-    <div class="ns-dot-wrap">
-      <div class="ns-ring1"></div><div class="ns-ring2"></div>
-      <div class="ns-core">⚡</div>
-    </div>
-    <span class="ns-label">Automatización</span>
-  </div>
-
-  <div class="ns-node" data-pos="bl" style="bottom:25%;left:18%"
-       onclick="selectNetwork('E-commerce',this)">
-    <div class="ns-dot-wrap">
-      <div class="ns-ring1"></div><div class="ns-ring2"></div>
-      <div class="ns-core">🛒</div>
-    </div>
-    <span class="ns-label">E-commerce</span>
-  </div>
-
-  <div class="ns-node" data-pos="br" style="bottom:22%;right:14%"
-       onclick="selectNetwork('Paquete completo',this)">
-    <div class="ns-dot-wrap">
-      <div class="ns-ring1"></div><div class="ns-ring2"></div>
-      <div class="ns-core">📦</div>
-    </div>
-    <span class="ns-label">Paquete completo</span>
-  </div>
-</div>
 </body>
 </html>
