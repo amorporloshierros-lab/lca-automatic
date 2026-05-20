@@ -968,6 +968,29 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
 }
 /* Modal appears after vortex */
 #project-modal.open{transition:none}
+@media(max-width:768px){
+  /* On mobile: solid bg (no hero canvas behind), nodes in 2x2 grid */
+  #network-select.active{
+    background:#0D0D12 !important;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:0;
+  }
+  .ns-title{
+    position:relative;top:auto;left:auto;transform:none;
+    margin-bottom:32px;font-size:11px;
+  }
+  .ns-node{
+    position:relative !important;
+    top:auto !important;left:auto !important;
+    right:auto !important;bottom:auto !important;
+  }
+  #ns-nodes-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:32px 24px;
+  }
+}
 </style>
 </head>
 <body>
@@ -2434,44 +2457,46 @@ const LOGO_SWITCH_AT = 6.0; // switch fast — feel like app launch
 //  ONE WORLD — hero reveals neural bg, warp in same space
 // ═══════════════════════════════════════════
 function openModal(){
-  const heroCanvas = document.getElementById('hero-canvas');
-  const heroEl     = document.getElementById('hero-content');
-  const header     = document.getElementById('header');
+  const isMobile = window.innerWidth <= 768;
 
-  // Blur active element to clear :active/:focus on mobile buttons
+  // Clear :active/:focus stuck state on mobile
   if(document.activeElement) document.activeElement.blur();
 
-  // Lock body scroll (defer on iOS to avoid pointer-events bug)
+  // Lock body scroll
   setTimeout(function(){ document.body.style.overflow='hidden'; }, 50);
 
-  // Fade hero text + header
-  if(heroEl){ heroEl.style.transition='opacity 0.8s ease'; heroEl.style.opacity='0'; }
-  if(header){ header.style.transition='opacity 0.6s ease'; header.style.opacity='0'; }
+  const heroEl = document.getElementById('hero-content');
+  const header = document.getElementById('header');
+  if(heroEl){ heroEl.style.transition='opacity 0.6s ease'; heroEl.style.opacity='0'; }
+  if(header){ header.style.transition='opacity 0.5s ease'; header.style.opacity='0'; }
 
-  // Expand neural canvas to fullscreen seamlessly
-  if(heroCanvas){
-    heroCanvas.style.transition='all 0.5s ease';
-    heroCanvas.style.position='fixed';
-    heroCanvas.style.inset='0';
-    heroCanvas.style.zIndex='29996';
-    heroCanvas.style.width='100vw';
-    heroCanvas.style.height='100vh';
-    heroCanvas.style.opacity='1';
+  if(!isMobile){
+    // Desktop: expand hero neural canvas to fullscreen behind overlay
+    const heroCanvas = document.getElementById('hero-canvas');
+    if(heroCanvas){
+      heroCanvas.style.transition='all 0.5s ease';
+      heroCanvas.style.position='fixed';
+      heroCanvas.style.inset='0';
+      heroCanvas.style.zIndex='29996';
+      heroCanvas.style.width='100vw';
+      heroCanvas.style.height='100vh';
+      heroCanvas.style.opacity='1';
+    }
   }
 
-  // Show network selection overlay after canvas expands
+  // Show network selection overlay
+  // On mobile: faster (300ms) — no canvas expansion needed, overlay is opaque
   setTimeout(function(){
     const ns = document.getElementById('network-select');
     ns.classList.add('active');
-    // Draw connecting lines between nodes after they're visible
-    setTimeout(drawNsLines, 80);
-  }, 520);
+    setTimeout(drawNsLines, 100);
+  }, isMobile ? 300 : 520);
 }
 
 // Draw faint SVG lines connecting all 4 nodes
 function drawNsLines(){
   const svg   = document.getElementById('ns-svg-lines');
-  const nodes = document.querySelectorAll('#network-select .ns-node');
+  const nodes = document.querySelectorAll('#ns-nodes-grid .ns-node');
   const pts   = Array.from(nodes).map(function(n){
     const r = n.querySelector('.ns-core').getBoundingClientRect();
     return { x: r.left + r.width/2, y: r.top + r.height/2 };
@@ -2823,40 +2848,42 @@ function closeModal(){
   <svg id="ns-svg-lines" xmlns="http://www.w3.org/2000/svg"></svg>
   <div class="ns-title">— Seleccioná tu red —</div>
 
-  <div class="ns-node" ontouchstart="" data-pos="tl" style="top:24%;left:14%"
-       onclick="selectNetwork('Diseño Web',this)">
-    <div class="ns-dot-wrap">
-      <div class="ns-ring1"></div><div class="ns-ring2"></div>
-      <div class="ns-core">🌐</div>
+  <div id="ns-nodes-grid">
+    <div class="ns-node" ontouchstart="" data-pos="tl" style="top:24%;left:14%"
+         onclick="selectNetwork('Diseño Web',this)">
+      <div class="ns-dot-wrap">
+        <div class="ns-ring1"></div><div class="ns-ring2"></div>
+        <div class="ns-core">🌐</div>
+      </div>
+      <span class="ns-label">Diseño Web</span>
     </div>
-    <span class="ns-label">Diseño Web</span>
-  </div>
 
-  <div class="ns-node" ontouchstart="" data-pos="tr" style="top:21%;right:15%"
-       onclick="selectNetwork('Automatización',this)">
-    <div class="ns-dot-wrap">
-      <div class="ns-ring1"></div><div class="ns-ring2"></div>
-      <div class="ns-core">⚡</div>
+    <div class="ns-node" ontouchstart="" data-pos="tr" style="top:21%;right:15%"
+         onclick="selectNetwork('Automatización',this)">
+      <div class="ns-dot-wrap">
+        <div class="ns-ring1"></div><div class="ns-ring2"></div>
+        <div class="ns-core">⚡</div>
+      </div>
+      <span class="ns-label">Automatización</span>
     </div>
-    <span class="ns-label">Automatización</span>
-  </div>
 
-  <div class="ns-node" ontouchstart="" data-pos="bl" style="bottom:25%;left:18%"
-       onclick="selectNetwork('E-commerce',this)">
-    <div class="ns-dot-wrap">
-      <div class="ns-ring1"></div><div class="ns-ring2"></div>
-      <div class="ns-core">🛒</div>
+    <div class="ns-node" ontouchstart="" data-pos="bl" style="bottom:25%;left:18%"
+         onclick="selectNetwork('E-commerce',this)">
+      <div class="ns-dot-wrap">
+        <div class="ns-ring1"></div><div class="ns-ring2"></div>
+        <div class="ns-core">🛒</div>
+      </div>
+      <span class="ns-label">E-commerce</span>
     </div>
-    <span class="ns-label">E-commerce</span>
-  </div>
 
-  <div class="ns-node" ontouchstart="" data-pos="br" style="bottom:22%;right:14%"
-       onclick="selectNetwork('Paquete completo',this)">
-    <div class="ns-dot-wrap">
-      <div class="ns-ring1"></div><div class="ns-ring2"></div>
-      <div class="ns-core">📦</div>
+    <div class="ns-node" ontouchstart="" data-pos="br" style="bottom:22%;right:14%"
+         onclick="selectNetwork('Paquete completo',this)">
+      <div class="ns-dot-wrap">
+        <div class="ns-ring1"></div><div class="ns-ring2"></div>
+        <div class="ns-core">📦</div>
+      </div>
+      <span class="ns-label">Paquete completo</span>
     </div>
-    <span class="ns-label">Paquete completo</span>
   </div>
 </div>
 </body>
