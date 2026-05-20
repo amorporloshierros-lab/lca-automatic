@@ -2506,15 +2506,17 @@ function runSearchAnimation(){
   ];
   var TX = scanPts[2].x, TY = scanPts[2].y;
 
-  // ── Pre-compute hyperspace lines (thin, crisp, Star Wars style) ──
-  var LINE_COUNT = isMobile ? 150 : 220;
-  var hypLines = Array.from({length: LINE_COUNT}, function(_, li){
-    var ang     = (li/LINE_COUNT)*Math.PI*2 + (Math.random()-0.5)*0.06;
-    var lenMult = 0.35 + Math.random()*1.3;   // length variation
-    var bright  = 0.45 + Math.random()*0.55;  // brightness variation
-    var width   = 0.25 + Math.random()*1.0;   // mostly thin, some thicker
-    var gold    = Math.random() > 0.55;        // ~45% gold tint, rest white/silver
-    return { ang:ang, lenMult:lenMult, bright:bright, width:width, gold:gold };
+  // ── Pre-compute hyperspace stars (cortadas, distribuidas, no desde el centro) ──
+  var LINE_COUNT = isMobile ? 170 : 260;
+  var hypLines = Array.from({length: LINE_COUNT}, function(){
+    return {
+      ang:    Math.random()*Math.PI*2,          // ángulo completamente aleatorio
+      dist:   25 + Math.random()*(maxR*.88),    // empieza a distancia random de TX,TY → líneas cortadas
+      len:    0.28 + Math.random()*1.1,         // longitud variable
+      bright: 0.4  + Math.random()*0.6,
+      width:  0.25 + Math.random()*0.85,
+      gold:   Math.random() > 0.52
+    };
   });
 
   // Timings
@@ -2598,28 +2600,29 @@ function runSearchAnimation(){
       // ── LÍNEAS HYPERSPACE: finas, crisp, radiando desde TX,TY ──
       // Igual que Star Wars: muchas líneas delgadas, algunas doradas, mayoría blancas
       hypLines.forEach(function(line){
-        // La cola (nearR) permanece cerca de TX,TY
-        // La cabeza (farR) se aleja rápido al aumentar la velocidad
-        var nearR = 1 + spE*3;
-        var farR  = nearR + (15 + spE*spE*maxR*1.1) * line.lenMult;
+        // Cada estrella empieza a su distancia propia y se aleja → efecto cortado/distribuido
+        var curDist  = line.dist * (1 + spE*1.4);       // la estrella se aleja de TX,TY
+        var streakLen= (8 + spE*spE*110) * line.len;    // el rastro crece con la velocidad
 
-        var lxN=TX+Math.cos(line.ang)*nearR, lyN=TY+Math.sin(line.ang)*nearR;
-        var lxF=TX+Math.cos(line.ang)*farR,  lyF=TY+Math.sin(line.ang)*farR;
+        // Segmento: empieza en curDist, termina en curDist+streakLen
+        // → NO conectado al centro TX,TY → aspecto de estrellas individuales
+        var lxN=TX+Math.cos(line.ang)*curDist,           lyN=TY+Math.sin(line.ang)*curDist;
+        var lxF=TX+Math.cos(line.ang)*(curDist+streakLen),lyF=TY+Math.sin(line.ang)*(curDist+streakLen);
 
-        var a = spE * line.bright;
-        // Dorado (colores del sitio) o blanco-plateado para variedad
+        // Descartar si está fuera de pantalla
+        if(lxN<-60||lxN>W+60||lyN<-60||lyN>H+60) return;
+
+        var a   = spE * line.bright;
         var col = line.gold ? '228,195,110' : '252,250,245';
 
-        // Gradiente: transparente en el extremo lejano, brillante cerca de TX,TY
+        // Brillante en el extremo interior (hacia TX,TY), fade en el exterior
         var gl=ctx.createLinearGradient(lxF,lyF,lxN,lyN);
         gl.addColorStop(0,'rgba('+col+',0)');
-        gl.addColorStop(0.6,'rgba('+col+','+(a*.35)+')');
+        gl.addColorStop(0.65,'rgba('+col+','+(a*.42)+')');
         gl.addColorStop(1,'rgba('+col+','+a+')');
 
-        ctx.beginPath();ctx.moveTo(lxF,lyF);ctx.lineTo(lxN,lyN);
-        ctx.strokeStyle=gl;
-        ctx.lineWidth=line.width;
-        ctx.stroke();
+        ctx.beginPath();ctx.moveTo(lxN,lyN);ctx.lineTo(lxF,lyF);
+        ctx.strokeStyle=gl;ctx.lineWidth=line.width;ctx.stroke();
       });
 
       // Núcleo en TX,TY — pequeño, no un sol, solo un punto de llegada
