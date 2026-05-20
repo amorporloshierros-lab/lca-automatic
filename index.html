@@ -140,8 +140,10 @@ body{background:var(--bg);color:var(--ivory);font-family:'Inter',sans-serif;over
 .hero-sub{font-size:clamp(16px,1.8vw,20px);color:rgba(250,248,245,.65);max-width:560px;line-height:1.8;margin-bottom:48px}
 .hero-sub strong{color:var(--gold2)}
 .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:72px}
-.btn-hero-primary{background:var(--gold);color:#000;border:none;font-weight:700;font-size:16px;font-family:'Inter',sans-serif;padding:16px 34px;border-radius:100px;cursor:pointer;transition:background .2s,transform .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-hero-primary{background:var(--gold);color:#000;border:none;font-weight:700;font-size:16px;font-family:'Inter',sans-serif;padding:16px 34px;border-radius:100px;cursor:pointer;transition:background .2s,transform .2s;display:inline-flex;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .btn-hero-primary:hover{background:var(--gold2);transform:scale(1.03)}
+.btn-hero-primary:active{transform:scale(0.97);background:var(--gold2)}
+@media(hover:none){.btn-hero-primary:hover{transform:none;background:var(--gold)}}
 .btn-hero-wa{background:transparent;color:var(--ivory);border:1px solid var(--border);font-weight:600;font-size:16px;font-family:'Inter',sans-serif;padding:16px 32px;border-radius:100px;cursor:pointer;transition:background .3s,color .3s,transform .2s;display:inline-flex;align-items:center;gap:8px}
 .btn-hero-wa:hover{background:var(--gold);color:#000;border-color:var(--gold);transform:scale(1.03)}
 .hero-stats{display:flex;gap:52px;flex-wrap:wrap}
@@ -2427,31 +2429,21 @@ const LOGO_SWITCH_AT = 6.0; // switch fast — feel like app launch
 //  ONE WORLD — hero reveals neural bg, warp in same space
 // ═══════════════════════════════════════════
 function openModal(){
-  const heroCanvas = document.getElementById('hero-canvas'); // the neural bg already there
-  const overlay    = document.getElementById('vortex-overlay');
-  const vc         = document.getElementById('vortex-canvas');
-  const ctx        = vc.getContext('2d');
+  const heroCanvas = document.getElementById('hero-canvas');
   const heroEl     = document.getElementById('hero-content');
   const header     = document.getElementById('header');
 
-  vc.width  = window.innerWidth;
-  vc.height = window.innerHeight;
-  const W=vc.width, H=vc.height, CX=W/2, CY=H/2;
+  // Blur active element to clear :active/:focus on mobile buttons
+  if(document.activeElement) document.activeElement.blur();
 
-  document.body.style.overflow='hidden';
+  // Lock body scroll (defer on iOS to avoid pointer-events bug)
+  setTimeout(function(){ document.body.style.overflow='hidden'; }, 50);
 
-  // ── Step 1: Fade the hero CONTENT away, revealing the neural bg underneath ──
-  // The neural canvas is already there — we just uncover it
-  if(heroEl){
-    heroEl.style.transition='opacity 0.8s ease';
-    heroEl.style.opacity='0';
-  }
-  if(header){
-    header.style.transition='opacity 0.6s ease';
-    header.style.opacity='0';
-  }
+  // Fade hero text + header
+  if(heroEl){ heroEl.style.transition='opacity 0.8s ease'; heroEl.style.opacity='0'; }
+  if(header){ header.style.transition='opacity 0.6s ease'; header.style.opacity='0'; }
 
-  // Expand the hero canvas to fill the screen seamlessly
+  // Expand neural canvas to fullscreen seamlessly
   if(heroCanvas){
     heroCanvas.style.transition='all 0.5s ease';
     heroCanvas.style.position='fixed';
@@ -2459,21 +2451,80 @@ function openModal(){
     heroCanvas.style.zIndex='29996';
     heroCanvas.style.width='100vw';
     heroCanvas.style.height='100vh';
-    heroCanvas.style.opacity='1'; // already visible, stays visible
+    heroCanvas.style.opacity='1';
   }
 
-  // ── Vortex canvas is TRANSPARENT — draws only warp on top of neural bg ──
-  overlay.style.transition='none';
-  overlay.style.opacity='1';
-  overlay.style.background='transparent'; // show through to neural network
+  // Show network selection overlay after canvas expands
+  setTimeout(function(){
+    const ns = document.getElementById('network-select');
+    ns.classList.add('active');
+    // Draw connecting lines between nodes after they're visible
+    setTimeout(drawNsLines, 80);
+  }, 520);
+}
+
+// Draw faint SVG lines connecting all 4 nodes
+function drawNsLines(){
+  const svg   = document.getElementById('ns-svg-lines');
+  const nodes = document.querySelectorAll('#network-select .ns-node');
+  const pts   = Array.from(nodes).map(function(n){
+    const r = n.querySelector('.ns-core').getBoundingClientRect();
+    return { x: r.left + r.width/2, y: r.top + r.height/2 };
+  });
+  let lines = '';
+  for(var i=0;i<pts.length;i++){
+    for(var j=i+1;j<pts.length;j++){
+      lines += '<line x1="'+pts[i].x+'" y1="'+pts[i].y+'" x2="'+pts[j].x+'" y2="'+pts[j].y
+             + '" stroke="rgba(201,168,76,0.13)" stroke-width="0.8" stroke-dasharray="4,8"/>';
+    }
+  }
+  svg.innerHTML = lines;
+}
+
+// Called when user clicks a network node
+function selectNetwork(chipName, el){
+  const ns = document.getElementById('network-select');
+
+  // Get exact screen position of clicked node for warp target
+  const core = el.querySelector('.ns-core');
+  const rect  = core.getBoundingClientRect();
+  const TX = rect.left + rect.width  / 2;
+  const TY = rect.top  + rect.height / 2;
+
+  // Pre-select matching chip in modal
+  document.querySelectorAll('.modal-chip').forEach(function(c){
+    const matches = c.textContent.toLowerCase().indexOf(chipName.toLowerCase()) !== -1;
+    c.classList.toggle('active', matches);
+  });
+
+  // Fade out network select
+  ns.style.transition = 'opacity 0.28s ease';
+  ns.style.opacity    = '0';
+  setTimeout(function(){
+    ns.classList.remove('active');
+    ns.style.opacity    = '';
+    ns.style.transition = '';
+  }, 300);
+
+  // Launch warp toward selected node
+  launchWarpToNode(TX, TY);
+}
+
+function launchWarpToNode(TX, TY){
+  const overlay = document.getElementById('vortex-overlay');
+  const vc      = document.getElementById('vortex-canvas');
+  const ctx     = vc.getContext('2d');
+
+  vc.width  = window.innerWidth;
+  vc.height = window.innerHeight;
+  const W=vc.width, H=vc.height, CX=W/2, CY=H/2;
+
+  overlay.style.transition = 'none';
+  overlay.style.opacity    = '1';
+  overlay.style.background = 'transparent';
   overlay.classList.add('active');
 
-  // Wait for hero content to fade (0.7s) then start warp
-  const WARP_DELAY = 42; // ~0.7s at 60fps before warp begins
-
-  const TX=W*0.52, TY=H*0.47;
-
-  // Warp streaks — gold only, same palette as page
+  // Gold warp streaks
   const PALETTE=[[201,168,76],[228,201,123],[250,248,245],[180,140,55],[240,220,150]];
   const streaks=Array.from({length:180},function(){
     const c=PALETTE[Math.floor(Math.random()*PALETTE.length)];
@@ -2490,180 +2541,136 @@ function openModal(){
     };
   });
 
-  // Nodes for search phase
-  const nodes=Array.from({length:55},function(_,i){
-    return{x:i===0?TX:Math.random()*W,y:i===0?TY:Math.random()*H,
-           r:i===0?5:1.5+Math.random()*2,bright:i===0?1:0.2+Math.random()*0.5,
-           vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25};
-  });
-  function rndN(){return 1+Math.floor(Math.random()*(nodes.length-1));}
-  const fA=rndN(); let fB; do{fB=rndN();}while(fB===fA);
-
   const diveS=Array.from({length:80},function(){
-    return{angle:Math.random()*Math.PI*2,dist:W*0.3+Math.random()*W*0.6,
-           speed:2+Math.random()*3.5,len:0.07+Math.random()*0.1,alpha:0.4+Math.random()*0.4};
+    return{
+      angle:Math.random()*Math.PI*2,
+      dist:W*0.28+Math.random()*W*0.55,
+      speed:2+Math.random()*3.5,
+      len:0.07+Math.random()*0.1,
+      alpha:0.4+Math.random()*0.4
+    };
   });
 
-  // ── Timings: total ~3.5s including the 0.7s wait ──
-  // t=0 starts immediately but warp draws after WARP_DELAY frames
-  // All phases relative to t=0
+  // Warp origin slightly biased toward the target
+  const wCX = CX + (TX-CX)*0.25;
+  const wCY = CY + (TY-CY)*0.25;
+
+  // Phase timings — warp starts immediately
   const P={
-    warpStart: WARP_DELAY,
-    warpPeak:  WARP_DELAY+40,
-    warpFade:  WARP_DELAY+32,
-    warpEnd:   WARP_DELAY+58,
-    netExtra:  WARP_DELAY+20, // boost neural brightness mid-warp
-    sA:        WARP_DELAY+62, sAEnd: WARP_DELAY+92,  // 0.5s
-    sB:        WARP_DELAY+92, sBEnd: WARP_DELAY+122, // 0.5s
-    found:     WARP_DELAY+122,foundEnd:WARP_DELAY+164,// 0.7s
-    preZoom:   WARP_DELAY+164,
-    dive:      WARP_DELAY+188,diveEnd:WARP_DELAY+220,
-    burst:     WARP_DELAY+220,done:   WARP_DELAY+238,
+    warpStart:0, warpPeak:28, warpFade:26, warpEnd:52,
+    dive:52,     diveEnd:86,
+    burst:86,    done:104
   };
 
   let t=0, finished=false, raf;
-  function lerp(a,b,t){return a+(b-a)*t;}
+  function lerp(a,b,v){return a+(b-a)*v;}
   function clamp(v,a,b){return Math.min(b,Math.max(a,v));}
   function smoothstep(x){x=clamp(x,0,1);return x*x*(3-2*x);}
   function easeIn(x,e){return Math.pow(clamp(x,0,1),e||2);}
 
   function draw(){
     t++; if(finished)return;
-
-    // Canvas transparent — neural bg shows through from heroCanvas below
     ctx.clearRect(0,0,W,H);
 
-    // ══ WARP — draws ON TOP of the visible neural network ══
-    if(t>=P.warpStart){
+    // ── WARP STREAKS ──
+    if(t<P.warpEnd){
       const wIn  = smoothstep(clamp((t-P.warpStart)/(P.warpPeak-P.warpStart),0,1));
       const wOut = 1-smoothstep(clamp((t-P.warpFade)/(P.warpEnd-P.warpFade),0,1));
       const wA   = wIn*wOut;
-
       if(wA>0.01){
-        // Slight dark tint to make streaks pop (very transparent)
-        ctx.fillStyle=`rgba(8,6,14,${wA*0.55})`;
+        ctx.fillStyle='rgba(8,6,14,'+(wA*0.52)+')';
         ctx.fillRect(0,0,W,H);
-
         streaks.forEach(function(s){
           s.dist+=s.speed*(0.12+wA*1.5);
           if(s.dist>Math.max(W,H)*0.85) s.dist=Math.random()*18;
-          const x1=CX+Math.cos(s.angle)*s.dist;
-          const y1=CY+Math.sin(s.angle)*s.dist;
+          const x1=wCX+Math.cos(s.angle)*s.dist;
+          const y1=wCY+Math.sin(s.angle)*s.dist;
           const tl=s.dist*s.len*(0.3+wA*1.8);
-          const x2=CX+Math.cos(s.angle)*(s.dist-tl);
-          const y2=CY+Math.sin(s.angle)*(s.dist-tl);
+          const x2=wCX+Math.cos(s.angle)*(s.dist-tl);
+          const y2=wCY+Math.sin(s.angle)*(s.dist-tl);
           const r=s.color[0],g=s.color[1],b=s.color[2];
           const a=s.alpha*wA;
           if(s.glow){
             const gg=ctx.createLinearGradient(x2,y2,x1,y1);
-            gg.addColorStop(0,`rgba(${r},${g},${b},0)`);
-            gg.addColorStop(1,`rgba(${r},${g},${b},${a*0.2})`);
+            gg.addColorStop(0,'rgba('+r+','+g+','+b+',0)');
+            gg.addColorStop(1,'rgba('+r+','+g+','+b+','+(a*0.2)+')');
             ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x1,y1);
             ctx.strokeStyle=gg;ctx.lineWidth=s.width*3.5;ctx.stroke();
           }
           const sg=ctx.createLinearGradient(x2,y2,x1,y1);
-          sg.addColorStop(0,`rgba(${r},${g},${b},0)`);
-          sg.addColorStop(1,`rgba(${r},${g},${b},${a})`);
+          sg.addColorStop(0,'rgba('+r+','+g+','+b+',0)');
+          sg.addColorStop(1,'rgba('+r+','+g+','+b+','+a+')');
           ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x1,y1);
           ctx.strokeStyle=sg;ctx.lineWidth=s.width;ctx.stroke();
         });
-
-        // Warm core glow
-        const cr=lerp(2,38,wA);
-        const cg=ctx.createRadialGradient(CX,CY,0,CX,CY,cr*3.2);
-        cg.addColorStop(0,`rgba(255,252,230,${wA*0.88})`);
-        cg.addColorStop(0.35,`rgba(228,201,123,${wA*0.38})`);
+        // Core glow at warp origin
+        const cr=lerp(2,36,wA);
+        const cg=ctx.createRadialGradient(wCX,wCY,0,wCX,wCY,cr*3.2);
+        cg.addColorStop(0,'rgba(255,252,230,'+(wA*0.88)+')');
+        cg.addColorStop(0.35,'rgba(228,201,123,'+(wA*0.38)+')');
         cg.addColorStop(1,'rgba(13,13,18,0)');
-        ctx.beginPath();ctx.arc(CX,CY,cr*3.2,0,Math.PI*2);ctx.fillStyle=cg;ctx.fill();
-        ctx.beginPath();ctx.arc(CX,CY,cr*0.2,0,Math.PI*2);
-        ctx.fillStyle=`rgba(255,255,248,${wA*0.85})`;ctx.fill();
+        ctx.beginPath();ctx.arc(wCX,wCY,cr*3.2,0,Math.PI*2);ctx.fillStyle=cg;ctx.fill();
+        ctx.beginPath();ctx.arc(wCX,wCY,cr*0.18,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,255,248,'+(wA*0.85)+')';ctx.fill();
       }
     }
 
-    // ══ SEARCH PHASE — drawn over the same background ══
-    if(t>=P.sA){
-      // Darken slightly so search is readable
-      const searchA=smoothstep(clamp((t-P.sA)/15,0,1));
-      ctx.fillStyle=`rgba(10,8,16,${searchA*0.6})`;ctx.fillRect(0,0,W,H);
-
-      // Boost neural nodes visibility (draw on top of heroCanvas)
-      nodes.forEach(function(n,i){
-        if(i>0){n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1;}
-        const gr=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*5);
-        gr.addColorStop(0,`rgba(228,201,123,${n.bright*searchA*0.5})`);gr.addColorStop(1,'rgba(201,168,76,0)');
-        ctx.beginPath();ctx.arc(n.x,n.y,n.r*5,0,Math.PI*2);ctx.fillStyle=gr;ctx.fill();
-        ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,248,210,${n.bright*searchA})`;ctx.fill();
+    // ── DIVE ZOOM toward the selected node ──
+    if(t>=P.dive && t<P.diveEnd){
+      const spE=easeIn(smoothstep((t-P.dive)/(P.diveEnd-P.dive)),2);
+      const cS=lerp(1,20,spE);
+      const ox=lerp(0,-(TX-W/2)*(cS-1),spE);
+      const oy=lerp(0,-(TY-H/2)*(cS-1),spE);
+      ctx.save();
+      ctx.translate(W/2+ox,H/2+oy);ctx.scale(cS,cS);ctx.translate(-W/2,-H/2);
+      diveS.forEach(function(s){
+        s.dist=Math.max(2,s.dist-s.speed*(1+spE*11));
+        if(s.dist<2) s.dist=W*0.28+Math.random()*W*0.5;
+        const x1=TX+Math.cos(s.angle)*s.dist;
+        const y1=TY+Math.sin(s.angle)*s.dist;
+        const x2=TX+Math.cos(s.angle)*(s.dist*(1+s.len));
+        const y2=TY+Math.sin(s.angle)*(s.dist*(1+s.len));
+        const g=ctx.createLinearGradient(x2,y2,x1,y1);
+        g.addColorStop(0,'rgba(255,248,180,0)');
+        g.addColorStop(1,'rgba(255,220,100,'+(s.alpha*spE)+')');
+        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
+        ctx.strokeStyle=g;ctx.lineWidth=0.7+spE*1.4;ctx.stroke();
       });
-
-      if(t>=P.sA&&t<P.sAEnd)   drawSearch(ctx,nodes[fA].x,nodes[fA].y,smoothstep((t-P.sA)/(P.sAEnd-P.sA)));
-      if(t>=P.sB&&t<P.sBEnd)   drawSearch(ctx,nodes[fB].x,nodes[fB].y,smoothstep((t-P.sB)/(P.sBEnd-P.sB)));
-
-      if(t>=P.found&&t<P.foundEnd){
-        const sp=smoothstep((t-P.found)/(P.foundEnd-P.found));
-        ctx.beginPath();ctx.arc(TX,TY,lerp(52,17,sp),0,Math.PI*2);ctx.strokeStyle=`rgba(201,168,76,${sp*0.85})`;ctx.lineWidth=1.6;ctx.stroke();
-        ctx.save();ctx.translate(TX,TY);ctx.rotate(t*0.045);ctx.beginPath();ctx.arc(0,0,11,0,Math.PI*2);ctx.setLineDash([3,6]);ctx.strokeStyle=`rgba(228,201,123,${sp*0.65})`;ctx.lineWidth=0.9;ctx.stroke();ctx.setLineDash([]);ctx.restore();
-        if(sp>0.35){ctx.font='9px JetBrains Mono,monospace';ctx.fillStyle=`rgba(201,168,76,${(sp-0.35)/0.65*0.8})`;ctx.textAlign='center';ctx.fillText('CONECTANDO...',TX,TY-28);ctx.textAlign='left';}
-        const ng=ctx.createRadialGradient(TX,TY,0,TX,TY,lerp(8,18,sp)*4);ng.addColorStop(0,`rgba(255,250,200,${sp})`);ng.addColorStop(1,'rgba(201,168,76,0)');
-        ctx.beginPath();ctx.arc(TX,TY,lerp(8,18,sp)*4,0,Math.PI*2);ctx.fillStyle=ng;ctx.fill();
-        ctx.beginPath();ctx.arc(TX,TY,lerp(4,8,sp),0,Math.PI*2);ctx.fillStyle=`rgba(255,255,240,${sp})`;ctx.fill();
-      }
-
-      if(t>=P.preZoom&&t<P.dive){
-        const pp=smoothstep((t-P.preZoom)/(P.dive-P.preZoom));
-        for(var r=0;r<3;r++){const rp=((t*2.2+r*18)%48)/48;ctx.beginPath();ctx.arc(TX,TY,lerp(8,65,rp),0,Math.PI*2);ctx.strokeStyle=`rgba(201,168,76,${(1-rp)*0.45*pp})`;ctx.lineWidth=0.9;ctx.stroke();}
-      }
-
-      if(t>=P.dive&&t<P.diveEnd){
-        const spE=easeIn(smoothstep((t-P.dive)/(P.diveEnd-P.dive)),2);
-        const cS=lerp(1,16,spE),cx2=lerp(0,-(TX-W/2)*(cS-1),spE),cy2=lerp(0,-(TY-H/2)*(cS-1),spE);
-        ctx.save();ctx.translate(W/2+cx2,H/2+cy2);ctx.scale(cS,cS);ctx.translate(-W/2,-H/2);
-        diveS.forEach(function(s){
-          s.dist=Math.max(2,s.dist-s.speed*(1+spE*11));if(s.dist<2)s.dist=W*0.3+Math.random()*W*0.5;
-          const x1=TX+Math.cos(s.angle)*s.dist,y1=TY+Math.sin(s.angle)*s.dist;
-          const x2=TX+Math.cos(s.angle)*(s.dist*(1+s.len)),y2=TY+Math.sin(s.angle)*(s.dist*(1+s.len));
-          const g=ctx.createLinearGradient(x2,y2,x1,y1);g.addColorStop(0,'rgba(255,248,180,0)');g.addColorStop(1,`rgba(201,168,76,${s.alpha*spE})`);
-          ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle=g;ctx.lineWidth=0.7+spE*1.3;ctx.stroke();
-        });
-        ctx.restore();
-      }
+      ctx.restore();
     }
 
-    // Burst
+    // ── WHITE BURST → opens form ──
     if(t>=P.burst){
       const bp=smoothstep((t-P.burst)/(P.done-P.burst));
-      ctx.fillStyle=`rgba(250,248,240,${bp})`;ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(250,248,240,'+bp+')';ctx.fillRect(0,0,W,H);
     }
 
-    if(t>=P.done&&!finished){
-      finished=true;cancelAnimationFrame(raf);
+    if(t>=P.done && !finished){
+      finished=true; cancelAnimationFrame(raf);
+      const heroEl    = document.getElementById('hero-content');
+      const header    = document.getElementById('header');
+      const heroCanvas= document.getElementById('hero-canvas');
       if(heroEl){heroEl.style.transition='';heroEl.style.opacity='';}
       if(header){header.style.transition='';header.style.opacity='';}
-      if(heroCanvas){heroCanvas.style.transition='';heroCanvas.style.position='';heroCanvas.style.inset='';heroCanvas.style.zIndex='';heroCanvas.style.width='';heroCanvas.style.height='';heroCanvas.style.opacity='';}
+      if(heroCanvas){
+        heroCanvas.style.transition='';heroCanvas.style.position='';
+        heroCanvas.style.inset='';heroCanvas.style.zIndex='';
+        heroCanvas.style.width='';heroCanvas.style.height='';
+      }
       const modal=document.getElementById('project-modal');
       modal.style.transition='none';modal.style.opacity='1';modal.classList.add('open');
       overlay.style.transition='opacity .4s ease';overlay.style.opacity='0';
-      setTimeout(function(){overlay.classList.remove('active');overlay.style.opacity='';overlay.style.transition='';modal.style.transition='';modal.style.opacity='';},420);
+      setTimeout(function(){
+        overlay.classList.remove('active');
+        overlay.style.opacity='';overlay.style.transition='';
+        modal.style.transition='';modal.style.opacity='';
+      },500);
       return;
     }
     raf=requestAnimationFrame(draw);
   }
   raf=requestAnimationFrame(draw);
 }
-
-function drawSearch(ctx,nx,ny,p){
-  const expanding=p<0.5, q=expanding?p*2:(p-0.5)*2;
-  const a=expanding?(1-Math.abs(q-0.5)*2)*0.75:(1-q)*0.55;
-  if(expanding){
-    ctx.beginPath();ctx.arc(nx,ny,lerp(36,14,q),0,Math.PI*2);
-    ctx.strokeStyle=`rgba(201,168,76,${a})`;ctx.lineWidth=1.3;ctx.stroke();
-    ctx.beginPath();ctx.arc(nx,ny,6,0,Math.PI*2);ctx.fillStyle=`rgba(228,201,123,${a*0.9})`;ctx.fill();
-  }else{
-    ctx.beginPath();ctx.arc(nx,ny,10,0,Math.PI*2);
-    ctx.strokeStyle=`rgba(185,45,45,${a})`;ctx.lineWidth=1.3;ctx.stroke();
-    ctx.fillStyle=`rgba(185,45,45,${a*0.28})`;ctx.fill();
-  }
-}
-
 
 // ── PROJECT MODAL ──
 function closeModal(){
@@ -2804,6 +2811,48 @@ function closeModal(){
 
   <div id="logo-loading-text">■ INICIANDO SISTEMA</div>
   <div id="logo-progress"><div id="logo-progress-fill"></div></div>
+</div>
+
+<!-- ══ NETWORK SELECT ══ -->
+<div id="network-select">
+  <svg id="ns-svg-lines" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="ns-title">— Seleccioná tu red —</div>
+
+  <div class="ns-node" ontouchstart="" data-pos="tl" style="top:24%;left:14%"
+       onclick="selectNetwork('Diseño Web',this)">
+    <div class="ns-dot-wrap">
+      <div class="ns-ring1"></div><div class="ns-ring2"></div>
+      <div class="ns-core">🌐</div>
+    </div>
+    <span class="ns-label">Diseño Web</span>
+  </div>
+
+  <div class="ns-node" ontouchstart="" data-pos="tr" style="top:21%;right:15%"
+       onclick="selectNetwork('Automatización',this)">
+    <div class="ns-dot-wrap">
+      <div class="ns-ring1"></div><div class="ns-ring2"></div>
+      <div class="ns-core">⚡</div>
+    </div>
+    <span class="ns-label">Automatización</span>
+  </div>
+
+  <div class="ns-node" ontouchstart="" data-pos="bl" style="bottom:25%;left:18%"
+       onclick="selectNetwork('E-commerce',this)">
+    <div class="ns-dot-wrap">
+      <div class="ns-ring1"></div><div class="ns-ring2"></div>
+      <div class="ns-core">🛒</div>
+    </div>
+    <span class="ns-label">E-commerce</span>
+  </div>
+
+  <div class="ns-node" ontouchstart="" data-pos="br" style="bottom:22%;right:14%"
+       onclick="selectNetwork('Paquete completo',this)">
+    <div class="ns-dot-wrap">
+      <div class="ns-ring1"></div><div class="ns-ring2"></div>
+      <div class="ns-core">📦</div>
+    </div>
+    <span class="ns-label">Paquete completo</span>
+  </div>
 </div>
 </body>
 </html>
