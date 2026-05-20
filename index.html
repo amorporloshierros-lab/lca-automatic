@@ -2468,13 +2468,13 @@ function openModal(){
   if(header){ header.style.transition='opacity 0.5s ease'; header.style.opacity='0'; }
 
   if(heroCanvas){
-    heroCanvas.style.transition     = 'all 0.5s ease';
-    heroCanvas.style.position       = 'fixed';
-    heroCanvas.style.inset          = '0';
-    heroCanvas.style.zIndex         = '29996';
-    heroCanvas.style.width          = '100vw';
-    heroCanvas.style.height         = '100vh';
-    heroCanvas.style.transformOrigin= '50% 50%';
+    heroCanvas.style.transition      = 'all 0.5s ease';
+    heroCanvas.style.position        = 'fixed';
+    heroCanvas.style.inset           = '0';
+    heroCanvas.style.zIndex          = '29996';
+    heroCanvas.style.width           = '100vw';
+    heroCanvas.style.height          = '100vh';
+    heroCanvas.style.transformOrigin = '50% 50%';
   }
 
   setTimeout(runSearchAnimation, 650);
@@ -2490,14 +2490,14 @@ function runSearchAnimation(){
   vc.width = W; vc.height = H;
   var CX = W/2, CY = H/2;
   var isMobile = W <= 768;
-  var maxR = Math.sqrt(Math.max(CX,W-CX)*Math.max(CX,W-CX) + Math.max(CY,H-CY)*Math.max(CY,H-CY)) * 1.15;
+  var maxR = Math.sqrt(W*W + H*H) * 0.65;
 
   overlay.style.background = 'transparent';
   overlay.style.opacity    = '1';
   overlay.style.transition = 'none';
   overlay.classList.add('active');
 
-  // 3 scan targets
+  // 3 scan targets — safe margins
   var mg = isMobile ? 80 : 110;
   var scanPts = [
     { x: mg + Math.random()*(W*.38-mg),    y: mg + Math.random()*(H*.32-mg)    },
@@ -2506,16 +2506,24 @@ function runSearchAnimation(){
   ];
   var TX = scanPts[2].x, TY = scanPts[2].y;
 
-  // ── Timings ──
-  // Zoom punches
-  var Z0=10, Z0h=25, Z0o=33, Z0e=45;
-  var Z1=60, Z1h=75, Z1o=83, Z1e=95;
-  var Z2=110, Z2h=126;
-  // Lock-on
-  var LOCK=126, LOCK_END=182;
-  // Single jump — arranca directo hacia TX,TY, sin fase de warp en el centro
-  var JUMP=172, JUMP_END=272;  // lights run until the very last frame
-  var BURST=252, DONE=272;
+  // ── Pre-compute hyperspace lines (thin, crisp, Star Wars style) ──
+  var LINE_COUNT = isMobile ? 150 : 220;
+  var hypLines = Array.from({length: LINE_COUNT}, function(_, li){
+    var ang     = (li/LINE_COUNT)*Math.PI*2 + (Math.random()-0.5)*0.06;
+    var lenMult = 0.35 + Math.random()*1.3;   // length variation
+    var bright  = 0.45 + Math.random()*0.55;  // brightness variation
+    var width   = 0.25 + Math.random()*1.0;   // mostly thin, some thicker
+    var gold    = Math.random() > 0.55;        // ~45% gold tint, rest white/silver
+    return { ang:ang, lenMult:lenMult, bright:bright, width:width, gold:gold };
+  });
+
+  // Timings
+  var Z0=10,Z0h=25,Z0o=33,Z0e=45;
+  var Z1=60,Z1h=75,Z1o=83,Z1e=95;
+  var Z2=110,Z2h=126;
+  var LOCK=126,LOCK_END=182;
+  var JUMP=172, JUMP_END=272;
+  var DONE=272;
 
   var t=0, finished=false, raf;
 
@@ -2526,135 +2534,123 @@ function runSearchAnimation(){
 
   function setHeroZoom(px,py,scale){
     if(!heroCanvas) return;
-    heroCanvas.style.transition     = 'none';
-    heroCanvas.style.transformOrigin= px+'px '+py+'px';
-    heroCanvas.style.transform      = 'scale('+scale+')';
+    heroCanvas.style.transition      = 'none';
+    heroCanvas.style.transformOrigin = px+'px '+py+'px';
+    heroCanvas.style.transform       = 'scale('+scale+')';
   }
 
   function draw(){
     t++; if(finished) return;
     ctx.clearRect(0,0,W,H);
 
-    // ── ZOOM PUNCH 1 ──────────────────────────────
+    // ── ZOOM PUNCH 1 ──
     if(t>=Z0 && t<Z0e){
-      var s = t<Z0h ? ss(clamp((t-Z0)/(Z0h-Z0),0,1))
-            : t<Z0o ? 1
-            : 1-ss(clamp((t-Z0o)/(Z0e-Z0o),0,1));
-      setHeroZoom(scanPts[0].x, scanPts[0].y, lerp(1,2.5,s));
-      if(s>.25){
-        var gr=ctx.createRadialGradient(scanPts[0].x,scanPts[0].y,0,scanPts[0].x,scanPts[0].y,isMobile?30:42);
-        gr.addColorStop(0,'rgba(255,250,180,'+(s*.5)+')'); gr.addColorStop(1,'rgba(201,168,76,0)');
-        ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(scanPts[0].x,scanPts[0].y,isMobile?30:42,0,Math.PI*2); ctx.fill();
+      var s=t<Z0h?ss(clamp((t-Z0)/(Z0h-Z0),0,1)):t<Z0o?1:1-ss(clamp((t-Z0o)/(Z0e-Z0o),0,1));
+      setHeroZoom(scanPts[0].x,scanPts[0].y,lerp(1,2.5,s));
+      if(s>.2){
+        var gr=ctx.createRadialGradient(scanPts[0].x,scanPts[0].y,0,scanPts[0].x,scanPts[0].y,isMobile?28:40);
+        gr.addColorStop(0,'rgba(255,250,180,'+(s*.5)+')');gr.addColorStop(1,'rgba(201,168,76,0)');
+        ctx.fillStyle=gr;ctx.beginPath();ctx.arc(scanPts[0].x,scanPts[0].y,isMobile?28:40,0,Math.PI*2);ctx.fill();
       }
     }
     if(t===Z0e) setHeroZoom(CX,CY,1);
 
-    // ── ZOOM PUNCH 2 ──────────────────────────────
+    // ── ZOOM PUNCH 2 ──
     if(t>=Z1 && t<Z1e){
-      var s = t<Z1h ? ss(clamp((t-Z1)/(Z1h-Z1),0,1))
-            : t<Z1o ? 1
-            : 1-ss(clamp((t-Z1o)/(Z1e-Z1o),0,1));
-      setHeroZoom(scanPts[1].x, scanPts[1].y, lerp(1,2.5,s));
-      if(s>.25){
-        var gr=ctx.createRadialGradient(scanPts[1].x,scanPts[1].y,0,scanPts[1].x,scanPts[1].y,isMobile?30:42);
-        gr.addColorStop(0,'rgba(255,250,180,'+(s*.5)+')'); gr.addColorStop(1,'rgba(201,168,76,0)');
-        ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(scanPts[1].x,scanPts[1].y,isMobile?30:42,0,Math.PI*2); ctx.fill();
+      var s=t<Z1h?ss(clamp((t-Z1)/(Z1h-Z1),0,1)):t<Z1o?1:1-ss(clamp((t-Z1o)/(Z1e-Z1o),0,1));
+      setHeroZoom(scanPts[1].x,scanPts[1].y,lerp(1,2.5,s));
+      if(s>.2){
+        var gr=ctx.createRadialGradient(scanPts[1].x,scanPts[1].y,0,scanPts[1].x,scanPts[1].y,isMobile?28:40);
+        gr.addColorStop(0,'rgba(255,250,180,'+(s*.5)+')');gr.addColorStop(1,'rgba(201,168,76,0)');
+        ctx.fillStyle=gr;ctx.beginPath();ctx.arc(scanPts[1].x,scanPts[1].y,isMobile?28:40,0,Math.PI*2);ctx.fill();
       }
     }
     if(t===Z1e) setHeroZoom(CX,CY,1);
 
-    // ── ZOOM PUNCH 3 — se queda zoomed ────────────
+    // ── ZOOM PUNCH 3 — se queda ──
     if(t>=Z2 && t<JUMP){
-      var zIn = ss(clamp((t-Z2)/(Z2h-Z2),0,1));
-      setHeroZoom(TX, TY, lerp(1, 2.8, zIn));
-
-      // Lock-on pulse en TX,TY
+      var zIn=ss(clamp((t-Z2)/(Z2h-Z2),0,1));
+      setHeroZoom(TX,TY,lerp(1,2.8,zIn));
       if(t>=LOCK){
-        var lp = clamp((t-LOCK)/22,0,1);
+        var lp=clamp((t-LOCK)/22,0,1);
         for(var ri=0;ri<2;ri++){
           var rp=((t*1.9+ri*28)%56)/56;
-          ctx.beginPath(); ctx.arc(TX,TY,lerp(5,isMobile?30:40,rp),0,Math.PI*2);
-          ctx.strokeStyle='rgba(201,168,76,'+(lp*(1-rp)*.85)+')';
-          ctx.lineWidth=1.5; ctx.stroke();
+          ctx.beginPath();ctx.arc(TX,TY,lerp(5,isMobile?28:38,rp),0,Math.PI*2);
+          ctx.strokeStyle='rgba(201,168,76,'+(lp*(1-rp)*.85)+')';ctx.lineWidth=1.5;ctx.stroke();
         }
-        var gr=ctx.createRadialGradient(TX,TY,0,TX,TY,isMobile?20:28);
-        gr.addColorStop(0,'rgba(255,252,200,'+(lp*.5)+')'); gr.addColorStop(1,'rgba(201,168,76,0)');
-        ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(TX,TY,isMobile?20:28,0,Math.PI*2); ctx.fill();
+        var gr=ctx.createRadialGradient(TX,TY,0,TX,TY,isMobile?18:26);
+        gr.addColorStop(0,'rgba(255,252,200,'+(lp*.45)+')');gr.addColorStop(1,'rgba(201,168,76,0)');
+        ctx.fillStyle=gr;ctx.beginPath();ctx.arc(TX,TY,isMobile?18:26,0,Math.PI*2);ctx.fill();
       }
     }
 
-    // ── SALTO ESPACIAL — una sola fase, directo hacia TX,TY ──────────
+    // ── SALTO ESPACIAL — efecto hyperspace Star Wars hacia TX,TY ──
     if(t>=JUMP && t<JUMP_END){
-      var spE = easeIn(ss(clamp((t-JUMP)/(JUMP_END-20-JUMP),0,1)), 2.2);
+      var raw  = clamp((t-JUMP)/(JUMP_END-20-JUMP),0,1);
+      var spE  = easeIn(ss(raw), 2.4);
 
-      // CSS zoom hacia TX,TY desde el principio
-      setHeroZoom(TX, TY, lerp(2.8, 26, spE));
+      // CSS zoom del hero canvas hacia TX,TY
+      setHeroZoom(TX,TY,lerp(2.8,28,spE));
 
-      // Vignette oscuro desde los bordes → TX,TY (efecto túnel)
-      var vTX = Math.max(TX, W-TX), vTY = Math.max(TY, H-TY);
-      var vR  = Math.sqrt(vTX*vTX+vTY*vTY)*1.1;
-      var vg = ctx.createRadialGradient(TX,TY, vR*(0.05+spE*.1), TX,TY, vR);
-      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,'+(spE*.82)+')');
-      ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+      // Oscurecer fondo — crea el contraste del efecto hyperspace
+      ctx.fillStyle='rgba(5,4,10,'+(spE*0.78)+')'; ctx.fillRect(0,0,W,H);
 
-      // Luces de velocidad — SOLO halos suaves, sin líneas sólidas
-      var nL = isMobile ? 60 : 92;
-      for(var li=0;li<nL;li++){
-        var ang  = (li/nL)*Math.PI*2 + Math.sin(li*137.508)*0.22 + Math.cos(li*73.137)*0.11;
-        var farR = maxR;
-        var nearR= 6 + spE*spE*105;
+      // ── LÍNEAS HYPERSPACE: finas, crisp, radiando desde TX,TY ──
+      // Igual que Star Wars: muchas líneas delgadas, algunas doradas, mayoría blancas
+      hypLines.forEach(function(line){
+        // La cola (nearR) permanece cerca de TX,TY
+        // La cabeza (farR) se aleja rápido al aumentar la velocidad
+        var nearR = 1 + spE*3;
+        var farR  = nearR + (15 + spE*spE*maxR*1.1) * line.lenMult;
 
-        var lxF=TX+Math.cos(ang)*farR, lyF=TY+Math.sin(ang)*farR;
-        var lxN=TX+Math.cos(ang)*nearR,lyN=TY+Math.sin(ang)*nearR;
+        var lxN=TX+Math.cos(line.ang)*nearR, lyN=TY+Math.sin(line.ang)*nearR;
+        var lxF=TX+Math.cos(line.ang)*farR,  lyF=TY+Math.sin(line.ang)*farR;
 
+        var a = spE * line.bright;
+        // Dorado (colores del sitio) o blanco-plateado para variedad
+        var col = line.gold ? '228,195,110' : '252,250,245';
+
+        // Gradiente: transparente en el extremo lejano, brillante cerca de TX,TY
         var gl=ctx.createLinearGradient(lxF,lyF,lxN,lyN);
-        gl.addColorStop(0,'rgba(255,248,200,0)');
-        gl.addColorStop(.8,'rgba(255,242,155,'+(spE*.14)+')');
-        gl.addColorStop(1,'rgba(255,228,110,'+(spE*.5)+')');
+        gl.addColorStop(0,'rgba('+col+',0)');
+        gl.addColorStop(0.6,'rgba('+col+','+(a*.35)+')');
+        gl.addColorStop(1,'rgba('+col+','+a+')');
 
-        // Halo exterior — muy suave
-        ctx.globalAlpha = 0.2*spE;
-        ctx.beginPath(); ctx.moveTo(lxF,lyF); ctx.lineTo(lxN,lyN);
-        ctx.strokeStyle=gl; ctx.lineWidth=isMobile?9+spE*13:14+spE*18; ctx.stroke();
+        ctx.beginPath();ctx.moveTo(lxF,lyF);ctx.lineTo(lxN,lyN);
+        ctx.strokeStyle=gl;
+        ctx.lineWidth=line.width;
+        ctx.stroke();
+      });
 
-        // Halo interior — algo más brillante pero ANCHO (no una línea fina)
-        ctx.globalAlpha = 0.35*spE;
-        ctx.beginPath(); ctx.moveTo(lxF,lyF); ctx.lineTo(lxN,lyN);
-        ctx.strokeStyle=gl; ctx.lineWidth=isMobile?3+spE*5:4+spE*7; ctx.stroke();
-
-        ctx.globalAlpha=1;
+      // Núcleo en TX,TY — pequeño, no un sol, solo un punto de llegada
+      if(spE > .3){
+        var cr = lerp(3,12,spE);
+        var cg=ctx.createRadialGradient(TX,TY,0,TX,TY,cr);
+        cg.addColorStop(0,'rgba(255,252,230,'+(spE*.9)+')');
+        cg.addColorStop(1,'rgba(228,195,110,0)');
+        ctx.fillStyle=cg;ctx.beginPath();ctx.arc(TX,TY,cr,0,Math.PI*2);ctx.fill();
       }
 
-      // Glow en el nodo destino — crece al acercarse
-      var gR=lerp(18,58,spE);
-      var tg=ctx.createRadialGradient(TX,TY,0,TX,TY,gR);
-      tg.addColorStop(0,'rgba(255,252,215,'+(spE*.92)+')'); tg.addColorStop(1,'rgba(201,168,76,0)');
-      ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(TX,TY,gR,0,Math.PI*2); ctx.fill();
-    }
-
-    // ── LLEGADA — la velocidad sigue hasta el final, fade suave sin destello ──
-    if(t>=BURST){
-      // El salto continúa — las luces siguen pasando (el JUMP corre hasta JUMP_END=255)
-      // Solo se agrega un fade sutil al fondo, sin flash de sol blanco
-      var bp = ss((t-BURST)/(DONE-BURST));
-      // Oscurecer levemente hacia negro (como entrar al nodo) — no destello blanco
-      ctx.fillStyle='rgba(13,13,18,'+( bp*.88)+')'; ctx.fillRect(0,0,W,H);
+      // Llegada: fade a negro suave en los últimos frames
+      if(raw > .82){
+        var ep = ss(clamp((raw-.82)/.18,0,1));
+        ctx.fillStyle='rgba(8,6,14,'+(ep*.92)+')'; ctx.fillRect(0,0,W,H);
+      }
     }
 
     if(t>=DONE && !finished){
       finished=true; cancelAnimationFrame(raf);
-      var he=document.getElementById('hero-content'), hd=document.getElementById('header');
-      var hc=document.getElementById('hero-canvas');
+      var he=document.getElementById('hero-content'),hd=document.getElementById('header'),hc=document.getElementById('hero-canvas');
       if(he){he.style.transition='';he.style.opacity='';}
       if(hd){hd.style.transition='';hd.style.opacity='';}
       if(hc) hc.style.cssText='';
       var ov2=document.getElementById('vortex-overlay');
       var modal=document.getElementById('project-modal');
-      modal.style.transition='none'; modal.style.opacity='1'; modal.classList.add('open');
-      ov2.style.transition='opacity .4s ease'; ov2.style.opacity='0';
+      modal.style.transition='none';modal.style.opacity='1';modal.classList.add('open');
+      ov2.style.transition='opacity .4s ease';ov2.style.opacity='0';
       setTimeout(function(){
-        ov2.classList.remove('active'); ov2.style.cssText='';
-        modal.style.transition=''; modal.style.opacity='';
+        ov2.classList.remove('active');ov2.style.cssText='';
+        modal.style.transition='';modal.style.opacity='';
         document.body.style.overflow='';
       },500);
       return;
