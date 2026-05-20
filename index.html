@@ -2464,22 +2464,19 @@ function openModal(){
   if(document.activeElement) document.activeElement.blur();
   document.body.style.overflow = 'hidden';
 
-  // Fade text and header — canvas stays visible
   if(heroEl){ heroEl.style.transition='opacity 0.6s ease'; heroEl.style.opacity='0'; }
   if(header){ header.style.transition='opacity 0.5s ease'; header.style.opacity='0'; }
 
-  // Expand neural canvas to fullscreen (it becomes the background for everything)
   if(heroCanvas){
-    heroCanvas.style.transition  = 'all 0.5s ease';
-    heroCanvas.style.position    = 'fixed';
-    heroCanvas.style.inset       = '0';
-    heroCanvas.style.zIndex      = '29996';
-    heroCanvas.style.width       = '100vw';
-    heroCanvas.style.height      = '100vh';
-    heroCanvas.style.transformOrigin = '50% 50%';
+    heroCanvas.style.transition     = 'all 0.5s ease';
+    heroCanvas.style.position       = 'fixed';
+    heroCanvas.style.inset          = '0';
+    heroCanvas.style.zIndex         = '29996';
+    heroCanvas.style.width          = '100vw';
+    heroCanvas.style.height         = '100vh';
+    heroCanvas.style.transformOrigin= '50% 50%';
   }
 
-  // Begin animation once hero text is gone
   setTimeout(runSearchAnimation, 650);
 }
 
@@ -2493,42 +2490,32 @@ function runSearchAnimation(){
   vc.width = W; vc.height = H;
   var CX = W/2, CY = H/2;
   var isMobile = W <= 768;
+  var maxR = Math.sqrt(Math.max(CX,W-CX)*Math.max(CX,W-CX) + Math.max(CY,H-CY)*Math.max(CY,H-CY)) * 1.15;
 
-  // Transparent overlay — hero canvas shows through underneath
   overlay.style.background = 'transparent';
   overlay.style.opacity    = '1';
   overlay.style.transition = 'none';
   overlay.classList.add('active');
 
-  // 3 scan targets — safe margin, well spread
+  // 3 scan targets
   var mg = isMobile ? 80 : 110;
   var scanPts = [
-    { x: mg + Math.random()*(W*.38-mg),   y: mg + Math.random()*(H*.32-mg)   },
-    { x: W*.56 + Math.random()*(W*.36-mg), y: mg + Math.random()*(H*.32-mg)   },
+    { x: mg + Math.random()*(W*.38-mg),    y: mg + Math.random()*(H*.32-mg)    },
+    { x: W*.56 + Math.random()*(W*.36-mg), y: mg + Math.random()*(H*.32-mg)    },
     { x: W*.22 + Math.random()*(W*.52),    y: H*.52 + Math.random()*(H*.28-mg) }
   ];
   var TX = scanPts[2].x, TY = scanPts[2].y;
 
-  // Warp streaks (gold)
-  var PAL = [[201,168,76],[228,201,123],[250,248,245],[180,140,55],[240,220,150]];
-  var streaks = Array.from({length: isMobile?110:170}, function(){
-    var c=PAL[Math.floor(Math.random()*PAL.length)], p=Math.random()>.3;
-    return{ angle:Math.random()*Math.PI*2, speed:5+Math.random()*15,
-            len:.05+Math.random()*.13, alpha:(p?.4:.15)+Math.random()*.3,
-            width:p?(.5+Math.random()*1.5):(.3+Math.random()*.5),
-            dist:Math.random()*20, color:c, glow:p&&Math.random()>.5 };
-  });
-
-  // ── Timings (frames @ 60fps) ──
-  // zoom punch: 15fr zoom-in · 8fr hold · 12fr zoom-out = 35fr each
-  // gap between punches: 15fr
-  var Z0 = 10,  Z0h = 25, Z0o = 33, Z0e = 45;    // zoom 1
-  var Z1 = 60,  Z1h = 75, Z1o = 83, Z1e = 95;    // zoom 2
-  var Z2 = 110, Z2h = 125; // zoom 3 — zooms in and STAYS
-  var LOCK = 125;           // lock-on glow starts
-  var WARP = 168, WPEAK=196, WFADE=194, WEND=224;
-  var DIVE = 210, DEND = 254;
-  var BURST= 254, DONE = 274;
+  // ── Timings ──
+  // Zoom punches
+  var Z0=10, Z0h=25, Z0o=33, Z0e=45;
+  var Z1=60, Z1h=75, Z1o=83, Z1e=95;
+  var Z2=110, Z2h=126;
+  // Lock-on
+  var LOCK=126, LOCK_END=182;
+  // Single jump — arranca directo hacia TX,TY, sin fase de warp en el centro
+  var JUMP=172, JUMP_END=255;
+  var BURST=252, DONE=272;
 
   var t=0, finished=false, raf;
 
@@ -2537,168 +2524,122 @@ function runSearchAnimation(){
   function ss(x){x=clamp(x,0,1);return x*x*(3-2*x);}
   function easeIn(x,e){return Math.pow(clamp(x,0,1),e||2);}
 
-  // Apply CSS zoom to hero canvas toward a screen point
-  function setHeroZoom(px, py, scale){
+  function setHeroZoom(px,py,scale){
     if(!heroCanvas) return;
-    // transform-origin at the target point, then scale
-    heroCanvas.style.transformOrigin = px+'px '+py+'px';
-    heroCanvas.style.transform       = 'scale('+scale+')';
+    heroCanvas.style.transition     = 'none';
+    heroCanvas.style.transformOrigin= px+'px '+py+'px';
+    heroCanvas.style.transform      = 'scale('+scale+')';
   }
 
   function draw(){
     t++; if(finished) return;
-
-    // Clear vortex canvas each frame (transparent)
     ctx.clearRect(0,0,W,H);
 
-    // ─── ZOOM PUNCH 1 ───────────────────────────────
-    if(t >= Z0 && t < Z0e){
-      var s = t < Z0h ? ss(clamp((t-Z0)/(Z0h-Z0),0,1))
-            : t < Z0o ? 1
-            : 1 - ss(clamp((t-Z0o)/(Z0e-Z0o),0,1));
-      setHeroZoom(scanPts[0].x, scanPts[0].y, lerp(1, 2.6, s));
-      // Brief glow at node (drawn on vortex canvas in screen coords — node stays at scanPts[0] since it's the transform origin)
-      if(s > .3){
-        var ga = s*.55;
-        var gr = ctx.createRadialGradient(scanPts[0].x,scanPts[0].y,0,scanPts[0].x,scanPts[0].y,isMobile?32:44);
-        gr.addColorStop(0,'rgba(255,250,180,'+ga+')'); gr.addColorStop(1,'rgba(201,168,76,0)');
-        ctx.beginPath(); ctx.arc(scanPts[0].x,scanPts[0].y,isMobile?32:44,0,Math.PI*2);
-        ctx.fillStyle=gr; ctx.fill();
+    // ── ZOOM PUNCH 1 ──────────────────────────────
+    if(t>=Z0 && t<Z0e){
+      var s = t<Z0h ? ss(clamp((t-Z0)/(Z0h-Z0),0,1))
+            : t<Z0o ? 1
+            : 1-ss(clamp((t-Z0o)/(Z0e-Z0o),0,1));
+      setHeroZoom(scanPts[0].x, scanPts[0].y, lerp(1,2.5,s));
+      if(s>.25){
+        var gr=ctx.createRadialGradient(scanPts[0].x,scanPts[0].y,0,scanPts[0].x,scanPts[0].y,isMobile?30:42);
+        gr.addColorStop(0,'rgba(255,250,180,'+(s*.5)+')'); gr.addColorStop(1,'rgba(201,168,76,0)');
+        ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(scanPts[0].x,scanPts[0].y,isMobile?30:42,0,Math.PI*2); ctx.fill();
       }
     }
-    if(t === Z0e) setHeroZoom(CX, CY, 1); // reset
+    if(t===Z0e) setHeroZoom(CX,CY,1);
 
-    // ─── ZOOM PUNCH 2 ───────────────────────────────
-    if(t >= Z1 && t < Z1e){
-      var s = t < Z1h ? ss(clamp((t-Z1)/(Z1h-Z1),0,1))
-            : t < Z1o ? 1
-            : 1 - ss(clamp((t-Z1o)/(Z1e-Z1o),0,1));
-      setHeroZoom(scanPts[1].x, scanPts[1].y, lerp(1, 2.6, s));
-      if(s > .3){
-        var ga = s*.55;
-        var gr = ctx.createRadialGradient(scanPts[1].x,scanPts[1].y,0,scanPts[1].x,scanPts[1].y,isMobile?32:44);
-        gr.addColorStop(0,'rgba(255,250,180,'+ga+')'); gr.addColorStop(1,'rgba(201,168,76,0)');
-        ctx.beginPath(); ctx.arc(scanPts[1].x,scanPts[1].y,isMobile?32:44,0,Math.PI*2);
-        ctx.fillStyle=gr; ctx.fill();
+    // ── ZOOM PUNCH 2 ──────────────────────────────
+    if(t>=Z1 && t<Z1e){
+      var s = t<Z1h ? ss(clamp((t-Z1)/(Z1h-Z1),0,1))
+            : t<Z1o ? 1
+            : 1-ss(clamp((t-Z1o)/(Z1e-Z1o),0,1));
+      setHeroZoom(scanPts[1].x, scanPts[1].y, lerp(1,2.5,s));
+      if(s>.25){
+        var gr=ctx.createRadialGradient(scanPts[1].x,scanPts[1].y,0,scanPts[1].x,scanPts[1].y,isMobile?30:42);
+        gr.addColorStop(0,'rgba(255,250,180,'+(s*.5)+')'); gr.addColorStop(1,'rgba(201,168,76,0)');
+        ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(scanPts[1].x,scanPts[1].y,isMobile?30:42,0,Math.PI*2); ctx.fill();
       }
     }
-    if(t === Z1e) setHeroZoom(CX, CY, 1); // reset
+    if(t===Z1e) setHeroZoom(CX,CY,1);
 
-    // ─── ZOOM PUNCH 3 — zooms in, STAYS, locks on ────
-    if(t >= Z2 && t < WARP){
-      var zoomIn = ss(clamp((t-Z2)/(Z2h-Z2),0,1));
-      var zScale = lerp(1, 2.8, zoomIn); // stays at 2.8 after Z2h
-      setHeroZoom(TX, TY, Math.min(zScale, 2.8));
+    // ── ZOOM PUNCH 3 — se queda zoomed ────────────
+    if(t>=Z2 && t<JUMP){
+      var zIn = ss(clamp((t-Z2)/(Z2h-Z2),0,1));
+      setHeroZoom(TX, TY, lerp(1, 2.8, zIn));
 
-      // Lock-on pulse rings (drawn on vortex canvas)
-      if(t >= LOCK){
-        var lp = clamp((t-LOCK)/28, 0, 1);
+      // Lock-on pulse en TX,TY
+      if(t>=LOCK){
+        var lp = clamp((t-LOCK)/22,0,1);
         for(var ri=0;ri<2;ri++){
-          var rp = ((t*1.8 + ri*26) % 52) / 52;
-          ctx.beginPath(); ctx.arc(TX,TY,lerp(4, isMobile?28:38, rp),0,Math.PI*2);
-          ctx.strokeStyle='rgba(201,168,76,'+(lp*(1-rp)*.8)+')';
-          ctx.lineWidth=1.6; ctx.stroke();
+          var rp=((t*1.9+ri*28)%56)/56;
+          ctx.beginPath(); ctx.arc(TX,TY,lerp(5,isMobile?30:40,rp),0,Math.PI*2);
+          ctx.strokeStyle='rgba(201,168,76,'+(lp*(1-rp)*.85)+')';
+          ctx.lineWidth=1.5; ctx.stroke();
         }
-        var gr=ctx.createRadialGradient(TX,TY,0,TX,TY,isMobile?22:30);
-        gr.addColorStop(0,'rgba(255,252,200,'+(lp*.45)+')'); gr.addColorStop(1,'rgba(201,168,76,0)');
-        ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(TX,TY,isMobile?22:30,0,Math.PI*2); ctx.fill();
+        var gr=ctx.createRadialGradient(TX,TY,0,TX,TY,isMobile?20:28);
+        gr.addColorStop(0,'rgba(255,252,200,'+(lp*.5)+')'); gr.addColorStop(1,'rgba(201,168,76,0)');
+        ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(TX,TY,isMobile?20:28,0,Math.PI*2); ctx.fill();
       }
     }
 
-    // ─── WARP STREAKS — centro se mueve progresivamente hacia TX,TY ──
-    if(t >= WARP && t < WEND){
-      var wProg = clamp((t-WARP)/(WEND-WARP),0,1);
-      var wIn   = ss(clamp((t-WARP)/(WPEAK-WARP),0,1));
-      var wOut  = 1-ss(clamp((t-WFADE)/(WEND-WFADE),0,1));
-      var wA    = wIn*wOut;
-      if(wA > .01){
-        ctx.fillStyle='rgba(8,6,14,'+(wA*.55)+')'; ctx.fillRect(0,0,W,H);
-        // Centro del warp viaja de (CX,CY) → (TX,TY) a medida que avanza
-        var wCX=lerp(CX, TX, ss(wProg)), wCY=lerp(CY, TY, ss(wProg));
-        streaks.forEach(function(s){
-          s.dist += s.speed*(.1+wA*1.6);
-          if(s.dist > Math.max(W,H)*.9) s.dist=Math.random()*16;
-          var x1=wCX+Math.cos(s.angle)*s.dist, y1=wCY+Math.sin(s.angle)*s.dist;
-          var tl=s.dist*s.len*(.28+wA*2);
-          var x2=wCX+Math.cos(s.angle)*(s.dist-tl), y2=wCY+Math.sin(s.angle)*(s.dist-tl);
-          var r=s.color[0],g=s.color[1],b=s.color[2],aa=s.alpha*wA;
-          if(s.glow){
-            var gg=ctx.createLinearGradient(x2,y2,x1,y1);
-            gg.addColorStop(0,'rgba('+r+','+g+','+b+',0)'); gg.addColorStop(1,'rgba('+r+','+g+','+b+','+(aa*.22)+')');
-            ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x1,y1);ctx.strokeStyle=gg;ctx.lineWidth=s.width*3.5;ctx.stroke();
-          }
-          var sg=ctx.createLinearGradient(x2,y2,x1,y1);
-          sg.addColorStop(0,'rgba('+r+','+g+','+b+',0)'); sg.addColorStop(1,'rgba('+r+','+g+','+b+','+aa+')');
-          ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x1,y1);ctx.strokeStyle=sg;ctx.lineWidth=s.width;ctx.stroke();
-        });
-        // Núcleo brillante en el punto de destino
-        var cr=lerp(2,32,wA);
-        var cg=ctx.createRadialGradient(wCX,wCY,0,wCX,wCY,cr*3);
-        cg.addColorStop(0,'rgba(255,252,230,'+(wA*.92)+')'); cg.addColorStop(.35,'rgba(228,201,123,'+(wA*.4)+')'); cg.addColorStop(1,'rgba(13,13,18,0)');
-        ctx.beginPath();ctx.arc(wCX,wCY,cr*3,0,Math.PI*2);ctx.fillStyle=cg;ctx.fill();
-        ctx.beginPath();ctx.arc(wCX,wCY,cr*.14,0,Math.PI*2);ctx.fillStyle='rgba(255,255,248,'+(wA*.95)+')';ctx.fill();
-      }
-    }
+    // ── SALTO ESPACIAL — una sola fase, directo hacia TX,TY ──────────
+    if(t>=JUMP && t<JUMP_END){
+      var spE = easeIn(ss(clamp((t-JUMP)/(JUMP_END-20-JUMP),0,1)), 2.2);
 
-    // ─── DIVE — CSS zoom hacia TX,TY + líneas que CONVERGEN en TX,TY ──
-    if(t >= DIVE && t < DEND){
-      var spE  = easeIn(ss((t-DIVE)/(DEND-DIVE)), 2.5);
-      var cS   = lerp(2.8, 28, spE);
-      // CSS: mantiene TX,TY fijo y escala alrededor
-      setHeroZoom(TX, TY, cS);
+      // CSS zoom hacia TX,TY desde el principio
+      setHeroZoom(TX, TY, lerp(2.8, 26, spE));
 
-      // Vignette oscuro desde los bordes hacia TX,TY
-      var maxR = Math.sqrt(Math.max(TX,W-TX)*Math.max(TX,W-TX) + Math.max(TY,H-TY)*Math.max(TY,H-TY));
-      var vg = ctx.createRadialGradient(TX,TY,maxR*(1-spE*.55),TX,TY,maxR);
-      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,'+(spE*.75)+')');
+      // Vignette oscuro desde los bordes → TX,TY (efecto túnel)
+      var vTX = Math.max(TX, W-TX), vTY = Math.max(TY, H-TY);
+      var vR  = Math.sqrt(vTX*vTX+vTY*vTY)*1.1;
+      var vg = ctx.createRadialGradient(TX,TY, vR*(0.05+spE*.1), TX,TY, vR);
+      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,'+(spE*.82)+')');
       ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
 
-      // Luces de velocidad — efecto salto espacial
-      // Sin vértice visible: cada luz es un destello suave con halo
-      var nLights = isMobile ? 55 : 85;
-      for(var li=0; li<nLights; li++){
-        // Ángulo con jitter para que no formen vértice geométrico visible
-        var baseAng = (li/nLights)*Math.PI*2;
-        var jitter  = (Math.sin(li*137.5)*0.18 + Math.cos(li*97.3)*0.12); // pseudo-random
-        var ang     = baseAng + jitter;
+      // Luces de velocidad — SOLO halos suaves, sin líneas sólidas
+      var nL = isMobile ? 60 : 92;
+      for(var li=0;li<nL;li++){
+        var ang  = (li/nL)*Math.PI*2 + Math.sin(li*137.508)*0.22 + Math.cos(li*73.137)*0.11;
+        var farR = maxR;
+        var nearR= 6 + spE*spE*105;
 
-        var farR  = maxR*1.15;
-        var nearR = 8 + spE*spE*95;
-
-        var lxF=TX+Math.cos(ang)*farR,  lyF=TY+Math.sin(ang)*farR;
-        var lxN=TX+Math.cos(ang)*nearR, lyN=TY+Math.sin(ang)*nearR;
+        var lxF=TX+Math.cos(ang)*farR, lyF=TY+Math.sin(ang)*farR;
+        var lxN=TX+Math.cos(ang)*nearR,lyN=TY+Math.sin(ang)*nearR;
 
         var gl=ctx.createLinearGradient(lxF,lyF,lxN,lyN);
         gl.addColorStop(0,'rgba(255,248,200,0)');
-        gl.addColorStop(.82,'rgba(255,242,160,'+(spE*.18)+')');
-        gl.addColorStop(1,'rgba(255,230,120,'+(spE*.52)+')');
+        gl.addColorStop(.8,'rgba(255,242,155,'+(spE*.14)+')');
+        gl.addColorStop(1,'rgba(255,228,110,'+(spE*.5)+')');
 
-        // Halo suave: trazo ancho muy transparente
-        ctx.globalAlpha = 0.18 * spE;
+        // Halo exterior — muy suave
+        ctx.globalAlpha = 0.2*spE;
         ctx.beginPath(); ctx.moveTo(lxF,lyF); ctx.lineTo(lxN,lyN);
-        ctx.strokeStyle=gl; ctx.lineWidth=isMobile?7+spE*10:10+spE*14; ctx.stroke();
+        ctx.strokeStyle=gl; ctx.lineWidth=isMobile?9+spE*13:14+spE*18; ctx.stroke();
 
-        // Núcleo brillante: trazo fino
-        ctx.globalAlpha = 1;
+        // Halo interior — algo más brillante pero ANCHO (no una línea fina)
+        ctx.globalAlpha = 0.35*spE;
         ctx.beginPath(); ctx.moveTo(lxF,lyF); ctx.lineTo(lxN,lyN);
-        ctx.strokeStyle=gl; ctx.lineWidth=.45+spE*.9; ctx.stroke();
+        ctx.strokeStyle=gl; ctx.lineWidth=isMobile?3+spE*5:4+spE*7; ctx.stroke();
+
+        ctx.globalAlpha=1;
       }
-      ctx.globalAlpha=1;
 
-      // Glow en el punto destino — el nodo que se va a "entrar"
-      var tgr=ctx.createRadialGradient(TX,TY,0,TX,TY,lerp(20,55,spE));
-      tgr.addColorStop(0,'rgba(255,252,210,'+(spE*.85)+')'); tgr.addColorStop(1,'rgba(201,168,76,0)');
-      ctx.fillStyle=tgr; ctx.beginPath(); ctx.arc(TX,TY,lerp(20,55,spE),0,Math.PI*2); ctx.fill();
+      // Glow en el nodo destino — crece al acercarse
+      var gR=lerp(18,58,spE);
+      var tg=ctx.createRadialGradient(TX,TY,0,TX,TY,gR);
+      tg.addColorStop(0,'rgba(255,252,215,'+(spE*.92)+')'); tg.addColorStop(1,'rgba(201,168,76,0)');
+      ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(TX,TY,gR,0,Math.PI*2); ctx.fill();
     }
 
-    // ─── WHITE BURST ────────────────────────────────
-    if(t >= BURST){
-      var bp = ss((t-BURST)/(DONE-BURST));
+    // ── BURST ─────────────────────────────────────
+    if(t>=BURST){
+      var bp=ss((t-BURST)/(DONE-BURST));
       ctx.fillStyle='rgba(250,248,240,'+bp+')'; ctx.fillRect(0,0,W,H);
     }
 
-    if(t >= DONE && !finished){
-      finished = true; cancelAnimationFrame(raf);
+    if(t>=DONE && !finished){
+      finished=true; cancelAnimationFrame(raf);
       var he=document.getElementById('hero-content'), hd=document.getElementById('header');
       var hc=document.getElementById('hero-canvas');
       if(he){he.style.transition='';he.style.opacity='';}
@@ -2712,12 +2653,12 @@ function runSearchAnimation(){
         ov2.classList.remove('active'); ov2.style.cssText='';
         modal.style.transition=''; modal.style.opacity='';
         document.body.style.overflow='';
-      }, 500);
+      },500);
       return;
     }
-    raf = requestAnimationFrame(draw);
+    raf=requestAnimationFrame(draw);
   }
-  raf = requestAnimationFrame(draw);
+  raf=requestAnimationFrame(draw);
 }
 
 
