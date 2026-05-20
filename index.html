@@ -2653,26 +2653,37 @@ function runSearchAnimation(){
       vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,'+(spE*.75)+')');
       ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
 
-      // Líneas de velocidad que CONVERGEN hacia TX,TY
-      // Salen de fuera de pantalla y terminan cerca de TX,TY
-      var nLines = isMobile ? 60 : 90;
-      for(var li=0; li<nLines; li++){
-        var ang   = (li/nLines)*Math.PI*2;
-        var farR  = maxR*1.1;                      // origen: fuera de pantalla
-        var nearR = 10 + spE*spE*90;               // cola: se acerca a TX,TY a velocidad
+      // Luces de velocidad — efecto salto espacial
+      // Sin vértice visible: cada luz es un destello suave con halo
+      var nLights = isMobile ? 55 : 85;
+      for(var li=0; li<nLights; li++){
+        // Ángulo con jitter para que no formen vértice geométrico visible
+        var baseAng = (li/nLights)*Math.PI*2;
+        var jitter  = (Math.sin(li*137.5)*0.18 + Math.cos(li*97.3)*0.12); // pseudo-random
+        var ang     = baseAng + jitter;
 
-        var lxFar = TX+Math.cos(ang)*farR,  lyFar = TY+Math.sin(ang)*farR;   // fuera de pantalla
-        var lxNear= TX+Math.cos(ang)*nearR, lyNear= TY+Math.sin(ang)*nearR;  // cerca del nodo
+        var farR  = maxR*1.15;
+        var nearR = 8 + spE*spE*95;
 
-        // Gradiente: brillante CERCA de TX,TY, transparente en los bordes
-        // → visual: todas las líneas apuntan y brillan EN TX,TY
-        var gl=ctx.createLinearGradient(lxFar,lyFar,lxNear,lyNear);
-        gl.addColorStop(0,'rgba(255,248,180,0)');
-        gl.addColorStop(.7,'rgba(255,240,140,'+(spE*.35)+')');
-        gl.addColorStop(1,'rgba(255,225,110,'+(spE*.75)+')');
-        ctx.beginPath(); ctx.moveTo(lxFar,lyFar); ctx.lineTo(lxNear,lyNear);
-        ctx.strokeStyle=gl; ctx.lineWidth=.55+spE*1.45; ctx.stroke();
+        var lxF=TX+Math.cos(ang)*farR,  lyF=TY+Math.sin(ang)*farR;
+        var lxN=TX+Math.cos(ang)*nearR, lyN=TY+Math.sin(ang)*nearR;
+
+        var gl=ctx.createLinearGradient(lxF,lyF,lxN,lyN);
+        gl.addColorStop(0,'rgba(255,248,200,0)');
+        gl.addColorStop(.82,'rgba(255,242,160,'+(spE*.18)+')');
+        gl.addColorStop(1,'rgba(255,230,120,'+(spE*.52)+')');
+
+        // Halo suave: trazo ancho muy transparente
+        ctx.globalAlpha = 0.18 * spE;
+        ctx.beginPath(); ctx.moveTo(lxF,lyF); ctx.lineTo(lxN,lyN);
+        ctx.strokeStyle=gl; ctx.lineWidth=isMobile?7+spE*10:10+spE*14; ctx.stroke();
+
+        // Núcleo brillante: trazo fino
+        ctx.globalAlpha = 1;
+        ctx.beginPath(); ctx.moveTo(lxF,lyF); ctx.lineTo(lxN,lyN);
+        ctx.strokeStyle=gl; ctx.lineWidth=.45+spE*.9; ctx.stroke();
       }
+      ctx.globalAlpha=1;
 
       // Glow en el punto destino — el nodo que se va a "entrar"
       var tgr=ctx.createRadialGradient(TX,TY,0,TX,TY,lerp(20,55,spE));
