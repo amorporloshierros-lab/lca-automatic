@@ -2525,6 +2525,7 @@ function runSearchAnimation(){
   var Z2=110,Z2h=126;
   var LOCK=126,LOCK_END=182;
   var JUMP=172, JUMP_END=272;
+  var LIGHTS_START=154;  // luces arrancan 0.3s antes que el zoom
   var DONE=272;
 
   var t=0, finished=false, raf;
@@ -2586,16 +2587,19 @@ function runSearchAnimation(){
       }
     }
 
-    // ── SALTO ESPACIAL — efecto hyperspace Star Wars hacia TX,TY ──
-    if(t>=JUMP && t<JUMP_END){
+    // ── SALTO ESPACIAL — luces arrancan 0.3s antes para entrada fluida ──
+    if(t>=LIGHTS_START && t<JUMP_END){
+      // spE basado en JUMP para que el ritmo de aceleración no cambie
       var raw  = clamp((t-JUMP)/(JUMP_END-20-JUMP),0,1);
-      var spE  = easeIn(ss(raw), 2.4);
+      var spE  = easeIn(ss(clamp(raw,0,1)), 2.4);
+      // earlyProg: 0→1 en los 18 frames previos al JUMP (fade-in suave de las luces)
+      var earlyProg = t < JUMP ? ss(clamp((t-LIGHTS_START)/18,0,1)) : 1;
 
-      // CSS zoom del hero canvas hacia TX,TY
-      setHeroZoom(TX,TY,lerp(2.8,28,spE));
+      // CSS zoom solo desde JUMP en adelante
+      if(t >= JUMP) setHeroZoom(TX,TY,lerp(2.8,28,spE));
 
-      // Oscurecer fondo — crea el contraste del efecto hyperspace
-      ctx.fillStyle='rgba(5,4,10,'+(spE*0.78)+')'; ctx.fillRect(0,0,W,H);
+      // Oscurecer fondo — fades in con las luces
+      ctx.fillStyle='rgba(5,4,10,'+(spE*0.78*earlyProg)+')'; ctx.fillRect(0,0,W,H);
 
       // ── LÍNEAS HYPERSPACE: finas, crisp, radiando desde TX,TY ──
       // Igual que Star Wars: muchas líneas delgadas, algunas doradas, mayoría blancas
@@ -2612,7 +2616,7 @@ function runSearchAnimation(){
         // Descartar si está fuera de pantalla
         if(lxN<-60||lxN>W+60||lyN<-60||lyN>H+60) return;
 
-        var a   = spE * line.bright;
+        var a   = spE * line.bright * earlyProg;
         var col = line.gold ? '228,195,110' : '252,250,245';
 
         // Brillante en el extremo interior (hacia TX,TY), fade en el exterior
