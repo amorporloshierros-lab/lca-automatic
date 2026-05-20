@@ -2525,7 +2525,7 @@ function runSearchAnimation(){
   var Z2=110,Z2h=126;
   var LOCK=126,LOCK_END=182;
   var JUMP=172, JUMP_END=272;
-  var LIGHTS_START=154;  // luces arrancan 0.3s antes que el zoom
+  var LIGHTS_START=112;  // luces arrancan 1s antes que el zoom (60 frames)
   var DONE=272;
 
   var t=0, finished=false, raf;
@@ -2593,7 +2593,7 @@ function runSearchAnimation(){
       var raw  = clamp((t-JUMP)/(JUMP_END-20-JUMP),0,1);
       var spE  = easeIn(ss(clamp(raw,0,1)), 2.4);
       // earlyProg: 0→1 en los 18 frames previos al JUMP (fade-in suave de las luces)
-      var earlyProg = t < JUMP ? ss(clamp((t-LIGHTS_START)/18,0,1)) : 1;
+      var earlyProg = t < JUMP ? ss(clamp((t-LIGHTS_START)/60,0,1)) : 1;
 
       // CSS zoom solo desde JUMP en adelante
       if(t >= JUMP) setHeroZoom(TX,TY,lerp(2.8,28,spE));
