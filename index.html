@@ -2500,30 +2500,31 @@ function runSearchAnimation(){
   overlay.classList.add('active');
 
   // Usar nodos reales de la red neuronal como destinos de escaneo
-  // Así el zoom apunta a células que el usuario puede ver
+  // IMPORTANTE: escalar buffer coords → CSS screen coords
   var scanPts;
   var heroNodes = window._heroNodes;
+  var hc = document.getElementById('hero-canvas');
+  // Factor de escala: buffer puede ser distinto a CSS viewport
+  var scaleX = hc ? W / hc.width  : 1;
+  var scaleY = hc ? H / hc.height : 1;
+
   if(heroNodes && heroNodes.length >= 10){
-    // Filtrar nodos visibles (con margen) y bien distribuidos
     var mg = isMobile ? 60 : 80;
-    var visible = heroNodes.filter(function(n){
-      return n.x>mg && n.x<W-mg && n.y>mg && n.y<H-mg;
-    });
-    // Dividir pantalla en zonas y elegir 1 nodo por zona para buena distribución
-    var zona1 = visible.filter(function(n){ return n.x<W*.5 && n.y<H*.5; });
+    // Convertir coordenadas de buffer a CSS antes de filtrar
+    var visible = heroNodes
+      .map(function(n){ return { x: n.x*scaleX, y: n.y*scaleY }; })
+      .filter(function(n){ return n.x>mg && n.x<W-mg && n.y>mg && n.y<H-mg; });
+
+    // 3 zonas de pantalla → 1 nodo por zona
+    var zona1 = visible.filter(function(n){ return n.x<W*.5  && n.y<H*.5; });
     var zona2 = visible.filter(function(n){ return n.x>=W*.5 && n.y<H*.5; });
     var zona3 = visible.filter(function(n){ return n.y>=H*.5; });
     function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
     var p1 = zona1.length ? pickRandom(zona1) : visible[0];
     var p2 = zona2.length ? pickRandom(zona2) : visible[Math.floor(visible.length/2)];
     var p3 = zona3.length ? pickRandom(zona3) : visible[visible.length-1];
-    scanPts = [
-      { x: p1.x, y: p1.y },
-      { x: p2.x, y: p2.y },
-      { x: p3.x, y: p3.y }
-    ];
+    scanPts = [ p1, p2, p3 ];
   } else {
-    // Fallback si los nodos no están disponibles aún
     var mg = isMobile ? 80 : 110;
     scanPts = [
       { x: mg + Math.random()*(W*.38-mg),    y: mg + Math.random()*(H*.32-mg)    },
