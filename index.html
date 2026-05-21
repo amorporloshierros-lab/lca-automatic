@@ -2090,6 +2090,8 @@ function initCanvas(){
     brightness:.5+Math.random()*.4,activation:Math.random(),
     activationSpeed:.004+Math.random()*.008,activating:Math.random()>.5
   }));
+  // Exportar nodos para que runSearchAnimation los use como destinos reales
+  window._heroNodes = nodes;
   const connAlpha={};
   let t=0;
   function scheduleActivation(n){
@@ -2497,13 +2499,38 @@ function runSearchAnimation(){
   overlay.style.transition = 'none';
   overlay.classList.add('active');
 
-  // 3 scan targets — safe margins
-  var mg = isMobile ? 80 : 110;
-  var scanPts = [
-    { x: mg + Math.random()*(W*.38-mg),    y: mg + Math.random()*(H*.32-mg)    },
-    { x: W*.56 + Math.random()*(W*.36-mg), y: mg + Math.random()*(H*.32-mg)    },
-    { x: W*.22 + Math.random()*(W*.52),    y: H*.52 + Math.random()*(H*.28-mg) }
-  ];
+  // Usar nodos reales de la red neuronal como destinos de escaneo
+  // Así el zoom apunta a células que el usuario puede ver
+  var scanPts;
+  var heroNodes = window._heroNodes;
+  if(heroNodes && heroNodes.length >= 10){
+    // Filtrar nodos visibles (con margen) y bien distribuidos
+    var mg = isMobile ? 60 : 80;
+    var visible = heroNodes.filter(function(n){
+      return n.x>mg && n.x<W-mg && n.y>mg && n.y<H-mg;
+    });
+    // Dividir pantalla en zonas y elegir 1 nodo por zona para buena distribución
+    var zona1 = visible.filter(function(n){ return n.x<W*.5 && n.y<H*.5; });
+    var zona2 = visible.filter(function(n){ return n.x>=W*.5 && n.y<H*.5; });
+    var zona3 = visible.filter(function(n){ return n.y>=H*.5; });
+    function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+    var p1 = zona1.length ? pickRandom(zona1) : visible[0];
+    var p2 = zona2.length ? pickRandom(zona2) : visible[Math.floor(visible.length/2)];
+    var p3 = zona3.length ? pickRandom(zona3) : visible[visible.length-1];
+    scanPts = [
+      { x: p1.x, y: p1.y },
+      { x: p2.x, y: p2.y },
+      { x: p3.x, y: p3.y }
+    ];
+  } else {
+    // Fallback si los nodos no están disponibles aún
+    var mg = isMobile ? 80 : 110;
+    scanPts = [
+      { x: mg + Math.random()*(W*.38-mg),    y: mg + Math.random()*(H*.32-mg)    },
+      { x: W*.56 + Math.random()*(W*.36-mg), y: mg + Math.random()*(H*.32-mg)    },
+      { x: W*.22 + Math.random()*(W*.52),    y: H*.52 + Math.random()*(H*.28-mg) }
+    ];
+  }
   var TX = scanPts[2].x, TY = scanPts[2].y;
 
   // ── Pre-compute hyperspace stars (cortadas, distribuidas, no desde el centro) ──
