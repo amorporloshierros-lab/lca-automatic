@@ -2525,7 +2525,7 @@ function runSearchAnimation(){
   var Z2=140,Z2h=158;
   var LOCK=158,LOCK_END=212;
   var JUMP=202, JUMP_END=302;
-  var LIGHTS_START=142;  // luces arrancan 1s (60fr) antes del zoom
+  var LIGHTS_START=202;  // luces y zoom arrancan exactamente juntos
   var DONE=302;
 
   var t=0, finished=false, raf;
@@ -2593,7 +2593,7 @@ function runSearchAnimation(){
       var raw  = clamp((t-JUMP)/(JUMP_END-20-JUMP),0,1);
       var spE  = easeIn(ss(clamp(raw,0,1)), 2.4);
       // earlyProg: 0→1 en los 18 frames previos al JUMP (fade-in suave de las luces)
-      var earlyProg = t < JUMP ? ss(clamp((t-LIGHTS_START)/60,0,1)) : 1;
+      var earlyProg = 1;
 
       // CSS zoom solo desde JUMP en adelante
       if(t >= JUMP) setHeroZoom(TX,TY,lerp(2.8,28,spE));
@@ -2638,10 +2638,11 @@ function runSearchAnimation(){
         ctx.fillStyle=cg;ctx.beginPath();ctx.arc(TX,TY,cr,0,Math.PI*2);ctx.fill();
       }
 
-      // Llegada: fade a negro suave en los últimos frames
-      if(raw > .82){
-        var ep = ss(clamp((raw-.82)/.18,0,1));
-        ctx.fillStyle='rgba(8,6,14,'+(ep*.92)+')'; ctx.fillRect(0,0,W,H);
+      // Llegada: fade muy suave en los últimos frames — sin corte
+      if(raw > .75){
+        var ep = ss(clamp((raw-.75)/.25,0,1));
+        // las luces se atenúan gradualmente al llegar a la neurona
+        ctx.fillStyle='rgba(8,6,14,'+(ep*.88)+')'; ctx.fillRect(0,0,W,H);
       }
     }
 
