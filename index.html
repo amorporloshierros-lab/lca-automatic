@@ -1556,6 +1556,209 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
   </div>
 </section>
 
+
+<!-- SOCIAL PROOF — empresas conectadas -->
+<style>
+#social-proof{padding:110px 0;background:var(--bg);overflow:hidden;position:relative}
+#social-proof::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+#social-proof::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--bordersub),transparent)}
+.sp-inner{max-width:1200px;margin:0 auto;padding:0 60px}
+.sp-top{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:end;margin-bottom:72px}
+.sp-stats{display:flex;gap:12px;flex-wrap:wrap}
+.sp-stat{background:var(--surface);border:1px solid var(--bordersub);border-radius:20px;padding:24px 28px;text-align:center;min-width:140px;transition:border-color .3s}
+.sp-stat:hover{border-color:var(--border)}
+.sp-stat-n{font-size:38px;font-weight:900;letter-spacing:-2px;line-height:1;background:linear-gradient(135deg,var(--gold),var(--gold2,#E4C97B));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sp-stat-l{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.sp-ticker-wrap{position:relative;margin-bottom:12px}
+.sp-ticker-wrap::before,.sp-ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:120px;z-index:2;pointer-events:none}
+.sp-ticker-wrap::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
+.sp-ticker-wrap::after{right:0;background:linear-gradient(-90deg,var(--bg),transparent)}
+.sp-ticker{display:flex;gap:12px;width:max-content;animation:tickerL 50s linear infinite}
+.sp-ticker.reverse{animation:tickerR 50s linear infinite}
+.sp-ticker-wrap:hover .sp-ticker{animation-play-state:paused}
+@keyframes tickerL{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes tickerR{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+.sp-chip{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--bordersub);border-radius:40px;padding:8px 18px;white-space:nowrap;font-size:13px;color:var(--ivory);opacity:.85;transition:all .2s;cursor:default}
+.sp-chip:hover{border-color:var(--border);opacity:1;color:var(--gold)}
+.sp-chip-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);opacity:.5;flex-shrink:0}
+.sp-chip.sent .sp-chip-dot{background:#00d97e;opacity:1;box-shadow:0 0 6px #00d97e80}
+.sp-cta-row{display:flex;align-items:center;justify-content:space-between;margin-top:64px;padding:40px 48px;background:var(--surface);border:1px solid var(--bordersub);border-radius:28px;gap:32px}
+.sp-cta-row:hover{border-color:var(--border)}
+.sp-cta-text h3{font-size:22px;font-weight:700;line-height:1.3;margin-bottom:8px}
+.sp-cta-text p{font-size:14px;color:var(--muted);line-height:1.6;max-width:520px}
+.sp-btn{display:inline-flex;align-items:center;gap:10px;background:var(--gold);color:#000;font-weight:700;font-size:14px;padding:14px 28px;border-radius:40px;border:none;cursor:pointer;white-space:nowrap;text-decoration:none;transition:all .3s;flex-shrink:0}
+.sp-btn:hover{background:var(--gold2,#E4C97B);transform:scale(1.04)}
+@media(max-width:768px){
+  .sp-inner{padding:0 24px}
+  .sp-top{grid-template-columns:1fr}
+  .sp-cta-row{flex-direction:column;text-align:center;padding:28px 24px}
+  .sp-cta-text p{max-width:100%}
+  .sp-stats{justify-content:center}
+}
+</style>
+
+<section id="social-proof">
+  <div class="sp-inner">
+
+    <div class="sp-top">
+      <div>
+        <div class="section-eyebrow">Red activa</div>
+        <h2 class="section-title">
+          Más de <span class="serif" style="color:var(--gold)">500 empresas</span><br>
+          ya conocen tu producto.
+        </h2>
+        <p style="font-size:16px;color:var(--muted);margin-top:20px;max-width:500px;line-height:1.7">
+          El sistema scrapeó, personalizó y envió mensajes automáticos a cientos de empresas del rubro construcción, inmobiliario y arquitectura en zona norte GBA. Esto es lo que puede hacer por tu negocio.
+        </p>
+      </div>
+      <div class="sp-stats">
+        <div class="sp-stat">
+          <div class="sp-stat-n" data-target="194">0</div>
+          <div class="sp-stat-l">leads únicos</div>
+        </div>
+        <div class="sp-stat">
+          <div class="sp-stat-n" data-target="3">0</div>
+          <div class="sp-stat-l">rubros</div>
+        </div>
+        <div class="sp-stat">
+          <div class="sp-stat-n" data-target="30">0</div>
+          <div class="sp-stat-l">mensajes/día</div>
+        </div>
+        <div class="sp-stat">
+          <div class="sp-stat-n" style="-webkit-text-fill-color:var(--gold);color:var(--gold)">0%</div>
+          <div class="sp-stat-l">ban rate</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TICKER ROW 1 — izquierda -->
+    <div class="sp-ticker-wrap" style="margin-bottom:12px">
+      <div class="sp-ticker" id="ticker1">
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>NORDELTA S.A.</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>Enobra S.A.</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>HALLNERS</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>Plan b Nordelta</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>Mantenimientos Premium</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>Lago16 Building Solutions</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>Grupo Brics Construcciones</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>Pentamar</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Alambrados Baires</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>DIN S.A.</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Dimasials</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>SKYTERRA</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Construcción de Mario Melo</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>GRUPO IRIZAR</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Grupo CEMAX</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Ponasec S.R.L.</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Galpones Y Tinglados Escobar</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Cemayco Escobar</span>
+        <!-- DUPLICATE for infinite loop -->
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>NORDELTA S.A.</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>Enobra S.A.</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>HALLNERS</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>Plan b Nordelta</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>Mantenimientos Premium</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>Lago16 Building Solutions</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>Grupo Brics Construcciones</span>
+        <span class="sp-chip sent"><span class="sp-chip-dot"></span>Pentamar</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Alambrados Baires</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>DIN S.A.</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Dimasials</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>SKYTERRA</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Construcción de Mario Melo</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>GRUPO IRIZAR</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Grupo CEMAX</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Ponasec S.R.L.</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Galpones Y Tinglados Escobar</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Cemayco Escobar</span>
+      </div>
+    </div>
+
+    <!-- TICKER ROW 2 — derecha -->
+    <div class="sp-ticker-wrap">
+      <div class="sp-ticker reverse" id="ticker2">
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Conrad Inmobiliaria</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Santa María de Tigre</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>TIZADO Nordelta</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Estudio Kohon</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>El Camino studio</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>MACDI | Desarrollos</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Nordelta Yoo</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Nordelta / Barrio El Yacht</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>NARVAEZ Inmobiliaria</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Iglesias Real Estate</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>D'Aria Propiedades</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Grupo Desinar</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>YH Estudio Arquitectura</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>LAGO ARCHITECTS</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Estudio Nicolas Pierry</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Studyo4 | Arquitectura</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>DGS Desarrollos Inmobiliarios</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>FS Propiedades NORDELTA</span>
+        <!-- DUPLICATE -->
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Conrad Inmobiliaria</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Santa María de Tigre</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>TIZADO Nordelta</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Estudio Kohon</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>El Camino studio</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>MACDI | Desarrollos</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Nordelta Yoo</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Nordelta / Barrio El Yacht</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>NARVAEZ Inmobiliaria</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Iglesias Real Estate</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>D'Aria Propiedades</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Grupo Desinar</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>YH Estudio Arquitectura</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>LAGO ARCHITECTS</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Estudio Nicolas Pierry</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>Studyo4 | Arquitectura</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>DGS Desarrollos Inmobiliarios</span>
+        <span class="sp-chip"><span class="sp-chip-dot" style="background:var(--muted);box-shadow:none"></span>FS Propiedades NORDELTA</span>
+      </div>
+    </div>
+
+    <!-- CTA row -->
+    <div class="sp-cta-row">
+      <div class="sp-cta-text">
+        <h3>¿Querés que tu negocio<br><span class="serif" style="color:var(--gold)">sea el próximo en la lista?</span></h3>
+        <p>El sistema identifica empresas de tu rubro, genera mensajes personalizados y los envía por WhatsApp en automático. Vos solo atendés a los que responden.</p>
+      </div>
+      <a href="#form-section" class="sp-btn">
+        Conocer el sistema
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<script>
+(function(){
+  // Animated counters for sp-stat-n
+  const counters = document.querySelectorAll('.sp-stat-n[data-target]');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const target = parseInt(el.dataset.target);
+      const duration = 1800;
+      const start = performance.now();
+      const tick = (now) => {
+        const p = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.floor(ease * target) + (target === 30 ? '' : '');
+        if (p < 1) requestAnimationFrame(tick);
+        else el.textContent = target + (target === 194 || target === 30 ? '+' : '');
+      };
+      requestAnimationFrame(tick);
+      obs.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(c => obs.observe(c));
+})();
+</script>
+
+
 <!-- LEAD FORM -->
 <section id="form-section">
   <div class="form-glow"></div>
