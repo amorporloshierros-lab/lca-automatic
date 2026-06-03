@@ -1556,6 +1556,139 @@ footer{background:#08080E;border-top:1px solid var(--bordersub);padding:60px;bor
   </div>
 </section>
 
+
+<!-- SOCIAL PROOF — alcance del sistema -->
+<style>
+#social-proof{padding:100px 0;background:var(--bg);overflow:hidden;position:relative}
+#social-proof::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+#social-proof::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--bordersub),transparent)}
+.sp-inner{max-width:1200px;margin:0 auto;padding:0 60px}
+.sp-head{text-align:center;margin-bottom:64px}
+.sp-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:72px}
+.sp-stat{background:var(--surface);border:1px solid var(--bordersub);border-radius:20px;padding:28px 36px;text-align:center;min-width:150px;transition:border-color .3s}
+.sp-stat:hover{border-color:var(--border)}
+.sp-stat-n{font-size:42px;font-weight:900;letter-spacing:-2px;line-height:1;background:linear-gradient(135deg,var(--gold),#E4C97B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sp-stat-l{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.sp-body{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.sp-text h2{font-size:clamp(28px,3.5vw,44px);font-weight:800;line-height:1.15;margin-bottom:20px}
+.sp-text h2 em{font-style:normal;color:var(--gold)}
+.sp-text p{color:var(--muted);font-size:17px;line-height:1.7;margin-bottom:16px}
+.sp-rubros{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.sp-rubro{background:var(--surface);border:1px solid var(--bordersub);border-radius:999px;padding:6px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+/* Ticker */
+.sp-ticker-wrap{overflow:hidden;position:relative;margin-top:56px;padding:20px 0}
+.sp-ticker-wrap::before,.sp-ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:120px;z-index:2}
+.sp-ticker-wrap::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
+.sp-ticker-wrap::after{right:0;background:linear-gradient(-90deg,var(--bg),transparent)}
+.sp-ticker{display:flex;gap:16px;width:max-content;animation:sp-scroll 38s linear infinite}
+@keyframes sp-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.sp-ticker:hover{animation-play-state:paused}
+.sp-chip{background:var(--surface);border:1px solid var(--bordersub);border-radius:12px;padding:10px 18px;white-space:nowrap;font-size:14px;color:var(--ivory);display:flex;align-items:center;gap:8px;transition:border-color .2s}
+.sp-chip:hover{border-color:var(--border)}
+.sp-chip span{font-size:18px}
+@media(max-width:768px){
+  .sp-inner{padding:0 24px}
+  .sp-body{grid-template-columns:1fr}
+  .sp-stat{padding:20px 24px;min-width:120px}
+  .sp-stat-n{font-size:32px}
+}
+</style>
+
+<section id="social-proof">
+  <div class="sp-inner">
+    <div class="sp-head">
+      <p class="section-eyebrow">— Alcance del sistema —</p>
+      <h2 style="font-size:clamp(30px,4vw,50px);font-weight:900;margin-bottom:16px">Más de <em style="color:var(--gold)">500 empresas</em> pueden<br>conocer tu negocio hoy</h2>
+      <p style="color:var(--muted);font-size:17px;max-width:560px;margin:0 auto">Nuestro sistema identifica y contacta leads calificados en múltiples industrias — de forma automática, personalizada y a escala.</p>
+    </div>
+
+    <div class="sp-stats">
+      <div class="sp-stat">
+        <div class="sp-stat-n">500+</div>
+        <div class="sp-stat-l">Empresas / mes</div>
+      </div>
+      <div class="sp-stat">
+        <div class="sp-stat-n">10</div>
+        <div class="sp-stat-l">Industrias</div>
+      </div>
+      <div class="sp-stat">
+        <div class="sp-stat-n">98%</div>
+        <div class="sp-stat-l">Entrega exitosa</div>
+      </div>
+      <div class="sp-stat">
+        <div class="sp-stat-n">24hs</div>
+        <div class="sp-stat-l">Tiempo de respuesta</div>
+      </div>
+    </div>
+
+    <div class="sp-body">
+      <div class="sp-text">
+        <h2>Tu mensaje llega directo a quienes <em>toman decisiones</em></h2>
+        <p>No compramos bases de datos. Nuestro sistema encuentra en tiempo real las empresas más relevantes para tu negocio y les envía un mensaje personalizado por WhatsApp.</p>
+        <p>Cada contacto es único, relevante y llega en el momento justo — sin spam, sin listas frías.</p>
+        <div class="sp-rubros">
+          <span class="sp-rubro">Inmobiliarias</span>
+          <span class="sp-rubro">Clínicas</span>
+          <span class="sp-rubro">Gimnasios</span>
+          <span class="sp-rubro">Marketing</span>
+          <span class="sp-rubro">Contabilidad</span>
+          <span class="sp-rubro">Gastronomía</span>
+          <span class="sp-rubro">Tech startups</span>
+          <span class="sp-rubro">Concesionarias</span>
+          <span class="sp-rubro">Seguros</span>
+          <span class="sp-rubro">Educación</span>
+        </div>
+      </div>
+      <div>
+        <div class="sp-stat" style="margin-bottom:16px;text-align:left;padding:32px">
+          <p style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Cómo funciona</p>
+          <p style="color:var(--ivory);font-size:15px;line-height:1.7;margin:0">El sistema detecta empresas activas en tu rubro, genera un mensaje personalizado para cada una y lo envía vía WhatsApp — todo sin intervención manual.</p>
+        </div>
+        <div class="sp-stat" style="text-align:left;padding:32px">
+          <p style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Resultado</p>
+          <p style="color:var(--ivory);font-size:15px;line-height:1.7;margin:0">Más visibilidad, más consultas y un flujo constante de nuevos clientes potenciales — en piloto automático.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ticker de empresas -->
+  <div class="sp-ticker-wrap" style="margin-top:64px">
+    <div class="sp-ticker" id="sp-ticker">
+      <div class="sp-chip"><span>🏗️</span>Constructoras</div>
+      <div class="sp-chip"><span>🏠</span>Inmobiliarias</div>
+      <div class="sp-chip"><span>🏥</span>Clínicas</div>
+      <div class="sp-chip"><span>💪</span>Gimnasios</div>
+      <div class="sp-chip"><span>📣</span>Agencias de Marketing</div>
+      <div class="sp-chip"><span>📊</span>Estudios Contables</div>
+      <div class="sp-chip"><span>🍽️</span>Restaurantes</div>
+      <div class="sp-chip"><span>💻</span>Tech Startups</div>
+      <div class="sp-chip"><span>🚗</span>Concesionarias</div>
+      <div class="sp-chip"><span>🛡️</span>Seguros</div>
+      <div class="sp-chip"><span>🎓</span>Educación</div>
+      <div class="sp-chip"><span>🏨</span>Hoteles</div>
+      <div class="sp-chip"><span>⚖️</span>Estudios Jurídicos</div>
+      <div class="sp-chip"><span>🦷</span>Odontología</div>
+      <div class="sp-chip"><span>🏋️</span>CrossFit & Wellness</div>
+      <div class="sp-chip"><span>🏗️</span>Constructoras</div>
+      <div class="sp-chip"><span>🏠</span>Inmobiliarias</div>
+      <div class="sp-chip"><span>🏥</span>Clínicas</div>
+      <div class="sp-chip"><span>💪</span>Gimnasios</div>
+      <div class="sp-chip"><span>📣</span>Agencias de Marketing</div>
+      <div class="sp-chip"><span>📊</span>Estudios Contables</div>
+      <div class="sp-chip"><span>🍽️</span>Restaurantes</div>
+      <div class="sp-chip"><span>💻</span>Tech Startups</div>
+      <div class="sp-chip"><span>🚗</span>Concesionarias</div>
+      <div class="sp-chip"><span>🛡️</span>Seguros</div>
+      <div class="sp-chip"><span>🎓</span>Educación</div>
+      <div class="sp-chip"><span>🏨</span>Hoteles</div>
+      <div class="sp-chip"><span>⚖️</span>Estudios Jurídicos</div>
+      <div class="sp-chip"><span>🦷</span>Odontología</div>
+      <div class="sp-chip"><span>🏋️</span>CrossFit & Wellness</div>
+    </div>
+  </div>
+</section>
+
 <!-- LEAD FORM -->
 <section id="form-section">
   <div class="form-glow"></div>
